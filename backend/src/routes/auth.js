@@ -25,5 +25,6 @@ router.post('/login',    login);
 // If token is invalid, verifyToken sends 401 and controller never runs
 router.get('/me',          verifyToken, getMe);
 router.put('/profile',     verifyToken, updateProfile);
+router.patch('/profile',   verifyToken, updateProfile);
 
 export default router;

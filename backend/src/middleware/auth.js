@@ -24,6 +24,7 @@
 
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { AppError } from '../utils/http.js';
 
 dotenv.config();
 
@@ -38,10 +39,9 @@ export const verifyToken = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1]; // "Bearer <token>"
 
   if (!token) {
-    return res.status(401).json({
-      error: 'Access denied. No token provided.',
-      hint:  'Send Authorization: Bearer <your_token> in the request header.'
-    });
+    return next(new AppError('Access denied. No token provided.', 401, {
+      hint: 'Send Authorization: Bearer <your_token> in the request header.',
+    }));
   }
 
   try {
@@ -61,14 +61,28 @@ export const verifyToken = (req, res, next) => {
     // TokenExpiredError: token is valid but older than 7 days
     // JsonWebTokenError: token was tampered with or malformed
     if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        error: 'Token expired. Please log in again.'
-      });
+      return next(new AppError('Token expired. Please log in again.', 401));
     }
-    return res.status(401).json({
-      error: 'Invalid token.'
-    });
+    return next(new AppError('Invalid token.', 401));
   }
+};
+
+export const attachUserIfPresent = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    next();
+    return;
+  }
+
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    req.user = undefined;
+  }
+
+  next();
 };
 
 // ── requireAdmin ─────────────────────────────────────────────
@@ -82,15 +96,11 @@ export const verifyToken = (req, res, next) => {
 export const requireAdmin = (req, res, next) => {
   // verifyToken must have run before this — req.user must exist
   if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required.' });
+    return next(new AppError('Authentication required.', 401));
   }
 
   if (req.user.role !== 'admin') {
-    return res.status(403).json({
-      // 401 = not authenticated (who are you?)
-      // 403 = not authorised (I know who you are, but you can't do this)
-      error: 'Forbidden. Admin privileges required.'
-    });
+    return next(new AppError('Forbidden. Admin privileges required.', 403));
   }
 
   next();

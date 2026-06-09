@@ -1,247 +1,257 @@
-// ============================================================
-// controllers/adminController.js — Admin moderation panel
-// ============================================================
-// All routes here are protected by BOTH verifyToken AND requireAdmin.
-// Regular users who somehow reach these routes get a 403 Forbidden.
-//
-// Responsibilities:
-//   GET  /api/admin/products/pending  → list products awaiting review
-//   GET  /api/admin/products/all      → all products with filters
-//   PATCH /api/admin/products/:id/approve → approve → status = live
-//   PATCH /api/admin/products/:id/reject  → reject  → status = rejected
-//   GET  /api/admin/analytics         → dashboard stats
-// ============================================================
-
 import { supabase } from '../db/supabase.js';
+import { deleteMultiple } from '../utils/cloudinary.js';
+import {
+  AppError,
+  asyncHandler,
+  buildPaginationMeta,
+  parsePagination,
+  sendSuccess,
+} from '../utils/http.js';
 
-// ── getPendingProducts ────────────────────────────────────────
-// GET /api/admin/products/pending
-// Returns all products with status = 'pending', newest first
-// Admin reviews these and approves or rejects each one
-export const getPendingProducts = async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .select(`
-        id, title, description, price, category,
-        image_urls, status, created_at,
-        seller:seller_id (
-          id, name, email
-        )
-      `)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: true }); // Oldest pending first (review queue)
+const ADMIN_SELECT = `
+  id, title, description, price, category, image_urls, public_ids,
+  status, created_at, expires_at, seller_id,
+  seller:seller_id ( id, name, email )
+`;
 
-    if (error) {
-      console.error('[getPendingProducts] error:', error.message);
-      return res.status(500).json({ error: 'Failed to fetch pending listings.' });
-    }
+export const getPendingProducts = asyncHandler(async (req, res) => {
+  const { page, limit, from, to } = parsePagination(req.query);
 
-    return res.json({ count: (data || []).length, items: data || [] });
-  } catch (err) {
-    console.error('[getPendingProducts] unexpected:', err.message);
-    return res.status(500).json({ error: 'Server error.' });
+  const { data, error, count } = await supabase
+    .from('products')
+    .select(ADMIN_SELECT, { count: 'exact' })
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+    .range(from, to);
+
+  if (error) {
+    throw new AppError('Failed to fetch pending listings.', 500, error.message);
   }
-};
 
-// ── getAllProducts ────────────────────────────────────────────
-// GET /api/admin/products/all?status=live
-// Admin can see ALL products regardless of status, with optional filter
-export const getAllProducts = async (req, res) => {
-  try {
-    const { status } = req.query;
+  return sendSuccess(res, {
+    message: 'Pending listings fetched successfully.',
+    data: data || [],
+    meta: {
+      pagination: buildPaginationMeta({ page, limit, total: count || 0 }),
+    },
+  });
+});
 
-    let query = supabase
-      .from('products')
-      .select(`
-        id, title, price, category, status, created_at, expires_at,
-        seller:seller_id ( id, name, email )
-      `)
-      .order('created_at', { ascending: false });
+export const getAllProducts = asyncHandler(async (req, res) => {
+  const { status, category, q, sort = 'newest' } = req.query;
+  const { page, limit, from, to } = parsePagination(req.query);
 
-    if (status) {
-      query = query.eq('status', status);
-    }
+  let query = supabase
+    .from('products')
+    .select(ADMIN_SELECT, { count: 'exact' });
 
-    const { data, error } = await query;
-
-    if (error) {
-      return res.status(500).json({ error: 'Failed to fetch products.' });
-    }
-
-    return res.json({ count: (data || []).length, items: data || [] });
-  } catch (err) {
-    return res.status(500).json({ error: 'Server error.' });
+  if (status) {
+    query = query.eq('status', status);
   }
-};
 
-// ── approveProduct ────────────────────────────────────────────
-// PATCH /api/admin/products/:id/approve
-// Sets status = 'live' and records which admin approved it.
-// Sends a notification to the seller.
-export const approveProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Fetch product to get seller_id and title (needed for notification)
-    const { data: product, error: fetchError } = await supabase
-      .from('products')
-      .select('id, title, seller_id, status')
-      .eq('id', id)
-      .single();
-
-    if (fetchError || !product) {
-      return res.status(404).json({ error: 'Product not found.' });
-    }
-
-    // Can only approve pending products
-    if (product.status !== 'pending') {
-      return res.status(400).json({
-        error: `Product is not pending. Current status: ${product.status}`
-      });
-    }
-
-    // ── Update product status ──
-    const { error: updateError } = await supabase
-      .from('products')
-      .update({
-        status:      'live',
-        approved_by: req.user.id,  // Track which admin approved — audit trail
-      })
-      .eq('id', id);
-
-    if (updateError) {
-      console.error('[approveProduct] update error:', updateError.message);
-      return res.status(500).json({ error: 'Failed to approve product.' });
-    }
-
-    // ── Notify the seller ──
-    // This INSERT into notifications triggers Supabase Realtime →
-    // seller's browser gets a WebSocket push instantly
-    await supabase.from('notifications').insert({
-      user_id:    product.seller_id,
-      type:       'approved',
-      title:      '🎉 Your listing is live!',
-      message:    `"${product.title}" has been approved and is now visible to buyers.`,
-      product_id: product.id,
-    });
-
-    return res.json({
-      message: 'Product approved and is now live.',
-      product_id: id
-    });
-  } catch (err) {
-    console.error('[approveProduct] unexpected:', err.message);
-    return res.status(500).json({ error: 'Server error.' });
+  if (category) {
+    query = query.eq('category', category);
   }
-};
 
-// ── rejectProduct ─────────────────────────────────────────────
-// PATCH /api/admin/products/:id/reject
-// Body: { reason: 'Why it was rejected' }
-// Sets status = 'rejected'. Notifies seller with the reason.
-export const rejectProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { reason } = req.body;
-
-    if (!reason || reason.trim().length < 5) {
-      return res.status(400).json({
-        error: 'A rejection reason is required (min 5 characters). The seller needs to know why.'
-      });
-    }
-
-    const { data: product, error: fetchError } = await supabase
-      .from('products')
-      .select('id, title, seller_id, status')
-      .eq('id', id)
-      .single();
-
-    if (fetchError || !product) {
-      return res.status(404).json({ error: 'Product not found.' });
-    }
-
-    if (product.status !== 'pending') {
-      return res.status(400).json({
-        error: `Only pending products can be rejected. Current status: ${product.status}`
-      });
-    }
-
-    const { error: updateError } = await supabase
-      .from('products')
-      .update({
-        status:      'rejected',
-        approved_by: req.user.id,
-      })
-      .eq('id', id);
-
-    if (updateError) {
-      return res.status(500).json({ error: 'Failed to reject product.' });
-    }
-
-    // Notify seller with the rejection reason
-    await supabase.from('notifications').insert({
-      user_id:    product.seller_id,
-      type:       'rejected',
-      title:      'Listing not approved',
-      message:    `"${product.title}" was not approved. Reason: ${reason.trim()}. You can edit and resubmit.`,
-      product_id: product.id,
-    });
-
-    return res.json({
-      message: 'Product rejected. Seller has been notified.',
-      product_id: id
-    });
-  } catch (err) {
-    console.error('[rejectProduct] unexpected:', err.message);
-    return res.status(500).json({ error: 'Server error.' });
+  if (q?.trim()) {
+    const term = q.trim();
+    query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
   }
-};
 
-// ── getAnalytics ──────────────────────────────────────────────
-// GET /api/admin/analytics
-// Returns dashboard stats: user count, products by status, recent activity
-// This is what the admin dashboard home page shows
-export const getAnalytics = async (req, res) => {
-  try {
-    // Run all count queries in PARALLEL using Promise.all
-    // Instead of waiting for each one sequentially (slow),
-    // they all run at the same time. Total time = slowest single query.
-    const [
-      usersResult,
-      pendingResult,
-      liveResult,
-      soldResult,
-      recentProducts,
-      interestResult,
-    ] = await Promise.all([
-      // Total registered users
-      supabase.from('users').select('*', { count: 'exact', head: true }),
-      // Products by status
-      supabase.from('products').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('products').select('*', { count: 'exact', head: true }).eq('status', 'live'),
-      supabase.from('products').select('*', { count: 'exact', head: true }).eq('status', 'sold'),
-      // 5 most recent listings (for activity feed)
-      supabase.from('products')
-        .select('id, title, status, created_at, seller:seller_id(name)')
-        .order('created_at', { ascending: false })
-        .limit(5),
-      // Total contact requests (buyer interest signals)
-      supabase.from('contact_requests').select('*', { count: 'exact', head: true }),
-    ]);
+  const sortColumn = sort === 'price_asc' || sort === 'price_desc' ? 'price' : 'created_at';
+  const ascending = sort === 'price_asc' || sort === 'oldest';
 
-    return res.json({
-      users:            usersResult.count  || 0,
+  const { data, error, count } = await query
+    .order(sortColumn, { ascending })
+    .range(from, to);
+
+  if (error) {
+    throw new AppError('Failed to fetch products.', 500, error.message);
+  }
+
+  return sendSuccess(res, {
+    message: 'Listings fetched successfully.',
+    data: data || [],
+    meta: {
+      pagination: buildPaginationMeta({ page, limit, total: count || 0 }),
+    },
+  });
+});
+
+export const approveProduct = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const { data: product, error: fetchError } = await supabase
+    .from('products')
+    .select('id, title, seller_id, status')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (fetchError) {
+    throw new AppError('Failed to fetch listing.', 500, fetchError.message);
+  }
+
+  if (!product) {
+    throw new AppError('Product not found.', 404);
+  }
+
+  if (product.status !== 'pending') {
+    throw new AppError(`Product is not pending. Current status: ${product.status}`, 400);
+  }
+
+  const { data: updated, error: updateError } = await supabase
+    .from('products')
+    .update({
+      status: 'live',
+      approved_by: req.user.id,
+    })
+    .eq('id', id)
+    .select(ADMIN_SELECT)
+    .single();
+
+  if (updateError || !updated) {
+    throw new AppError('Failed to approve product.', 500, updateError?.message);
+  }
+
+  await supabase.from('notifications').insert({
+    user_id: product.seller_id,
+    type: 'approved',
+    title: 'Your listing is live!',
+    message: `"${product.title}" has been approved and is now visible to buyers.`,
+    product_id: product.id,
+  });
+
+  return sendSuccess(res, {
+    message: 'Product approved successfully.',
+    data: updated,
+  });
+});
+
+export const rejectProduct = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body;
+
+  if (!reason?.trim() || reason.trim().length < 5) {
+    throw new AppError('A rejection reason is required and must be at least 5 characters.', 400);
+  }
+
+  const { data: product, error: fetchError } = await supabase
+    .from('products')
+    .select('id, title, seller_id, status')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (fetchError) {
+    throw new AppError('Failed to fetch listing.', 500, fetchError.message);
+  }
+
+  if (!product) {
+    throw new AppError('Product not found.', 404);
+  }
+
+  if (product.status !== 'pending') {
+    throw new AppError(`Only pending products can be rejected. Current status: ${product.status}`, 400);
+  }
+
+  const { data: updated, error: updateError } = await supabase
+    .from('products')
+    .update({
+      status: 'rejected',
+      approved_by: req.user.id,
+    })
+    .eq('id', id)
+    .select(ADMIN_SELECT)
+    .single();
+
+  if (updateError || !updated) {
+    throw new AppError('Failed to reject product.', 500, updateError?.message);
+  }
+
+  await supabase.from('notifications').insert({
+    user_id: product.seller_id,
+    type: 'rejected',
+    title: 'Listing not approved',
+    message: `"${product.title}" was not approved. Reason: ${reason.trim()}.`,
+    product_id: product.id,
+  });
+
+  return sendSuccess(res, {
+    message: 'Product rejected successfully.',
+    data: updated,
+  });
+});
+
+export const deleteAnyProduct = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const { data: product, error: fetchError } = await supabase
+    .from('products')
+    .select('id, title, public_ids')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (fetchError) {
+    throw new AppError('Failed to fetch listing.', 500, fetchError.message);
+  }
+
+  if (!product) {
+    throw new AppError('Product not found.', 404);
+  }
+
+  if (product.public_ids?.length) {
+    await deleteMultiple(product.public_ids);
+  }
+
+  const { error: deleteError } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', id);
+
+  if (deleteError) {
+    throw new AppError('Failed to delete listing.', 500, deleteError.message);
+  }
+
+  return sendSuccess(res, {
+    message: 'Listing deleted successfully.',
+    data: { id },
+  });
+});
+
+export const getAnalytics = asyncHandler(async (req, res) => {
+  const [
+    usersResult,
+    pendingResult,
+    liveResult,
+    soldResult,
+    rejectedResult,
+    interestResult,
+    recentProducts,
+  ] = await Promise.all([
+    supabase.from('users').select('*', { count: 'exact', head: true }),
+    supabase.from('products').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('products').select('*', { count: 'exact', head: true }).eq('status', 'live'),
+    supabase.from('products').select('*', { count: 'exact', head: true }).eq('status', 'sold'),
+    supabase.from('products').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
+    supabase.from('contact_requests').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('products')
+      .select('id, title, status, created_at, seller:seller_id(name)')
+      .order('created_at', { ascending: false })
+      .limit(5),
+  ]);
+
+  return sendSuccess(res, {
+    message: 'Analytics fetched successfully.',
+    data: {
+      users: usersResult.count || 0,
       products: {
-        pending:        pendingResult.count || 0,
-        live:           liveResult.count    || 0,
-        sold:           soldResult.count    || 0,
+        pending: pendingResult.count || 0,
+        live: liveResult.count || 0,
+        sold: soldResult.count || 0,
+        rejected: rejectedResult.count || 0,
       },
-      total_interests:  interestResult.count || 0,
-      recent_listings:  recentProducts.data  || [],
-    });
-  } catch (err) {
-    console.error('[getAnalytics] error:', err.message);
-    return res.status(500).json({ error: 'Failed to load analytics.' });
-  }
-};
+      total_interests: interestResult.count || 0,
+      recent_listings: recentProducts.data || [],
+    },
+  });
+});

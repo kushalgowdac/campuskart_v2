@@ -6,6 +6,7 @@ import {
   approveProduct,
   rejectProduct,
   getAnalytics,
+  deleteAnyProduct,
 } from '../controllers/adminController.js';
 import { verifyToken, requireAdmin } from '../middleware/auth.js';
 
@@ -16,9 +17,10 @@ const router = Router();
 const adminGuard = [verifyToken, requireAdmin];
 
 router.get('/products/pending',       ...adminGuard, getPendingProducts);
-router.get('/products/all',           ...adminGuard, getAllProducts);
+router.get('/products',               ...adminGuard, getAllProducts);
 router.patch('/products/:id/approve', ...adminGuard, approveProduct);
 router.patch('/products/:id/reject',  ...adminGuard, rejectProduct);
+router.delete('/products/:id',        ...adminGuard, deleteAnyProduct);
 router.get('/analytics',              ...adminGuard, getAnalytics);
 
 export default router;

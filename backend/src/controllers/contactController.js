@@ -1,171 +1,172 @@
-// ============================================================
-// controllers/contactController.js — Buyer → Seller contact flow
-// ============================================================
-// This is the CORE feature of CampusKart.
-// When a buyer clicks "I'm Interested":
-//   1. We record the interest (contact_requests table)
-//   2. We notify the seller (notifications table → Realtime push)
-//   3. We return the seller's contact info to the buyer
-//   4. Buyer takes the conversation to WhatsApp/email/telegram etc.
-//
-// The app's role ends here. No in-app chat. Clean and simple.
-// ============================================================
-
 import { supabase } from '../db/supabase.js';
+import {
+  AppError,
+  asyncHandler,
+  buildPaginationMeta,
+  parsePagination,
+  sendSuccess,
+} from '../utils/http.js';
 
-// ── showInterest ──────────────────────────────────────────────
-// POST /api/contact/:productId
-// Protected — buyer must be logged in
-// Returns seller contact info so buyer can reach out externally
-export const showInterest = async (req, res) => {
-  try {
-    const { productId } = req.params;
-    const buyerId = req.user.id;
+export const showInterest = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const buyerId = req.user.id;
 
-    // ── Fetch the product ──
-    const { data: product, error: productError } = await supabase
-      .from('products')
-      .select(`
-        id, title, price, status, seller_id,
-        seller:seller_id (
-          id, name, email, instagram, telegram, reddit
-        )
-      `)
-      .eq('id', productId)
-      .single();
+  const { data: product, error: productError } = await supabase
+    .from('products')
+    .select(`
+      id, title, price, status, seller_id,
+      seller:seller_id (
+        id, name, email, instagram, telegram, reddit
+      )
+    `)
+    .eq('id', productId)
+    .maybeSingle();
 
-    if (productError || !product) {
-      return res.status(404).json({ error: 'Product not found.' });
-    }
+  if (productError) {
+    throw new AppError('Failed to fetch product.', 500, productError.message);
+  }
 
-    // Can't show interest in your own listing
-    if (product.seller_id === buyerId) {
-      return res.status(400).json({ error: 'You cannot contact yourself about your own listing.' });
-    }
+  if (!product) {
+    throw new AppError('Product not found.', 404);
+  }
 
-    // Can only contact for live products
-    if (product.status !== 'live') {
-      return res.status(400).json({
-        error: 'This listing is no longer available.'
-      });
-    }
+  if (product.seller_id === buyerId) {
+    throw new AppError('You cannot contact yourself about your own listing.', 400);
+  }
 
-    // ── Record the contact request ──
-    // upsert = INSERT if not exists, do nothing if already exists
-    // onConflict: 'product_id,buyer_id' matches our UNIQUE constraint
-    // ignoreDuplicates: true → if this buyer already showed interest, no error, no duplicate notification
-    const { error: contactError } = await supabase
-      .from('contact_requests')
-      .upsert(
-        {
-          product_id: productId,
-          buyer_id:   buyerId,
-          seller_id:  product.seller_id,
-        },
-        {
-          onConflict:       'product_id,buyer_id',
-          ignoreDuplicates: true, // Silent ignore on duplicate — no error thrown
-        }
-      );
+  if (product.status !== 'live') {
+    throw new AppError('This listing is no longer available.', 400);
+  }
 
-    if (contactError) {
-      console.error('[showInterest] contact_request error:', contactError.message);
-      // Don't block the buyer — still show seller info even if DB record fails
-    }
+  const { error: upsertError } = await supabase
+    .from('contact_requests')
+    .upsert(
+      {
+        product_id: productId,
+        buyer_id: buyerId,
+        seller_id: product.seller_id,
+      },
+      {
+        onConflict: 'product_id,buyer_id',
+        ignoreDuplicates: true,
+      }
+    );
 
-    // ── Check if this is the first time this buyer is showing interest ──
-    // We only want to notify the seller ONCE per buyer, not on every revisit
-    const { count } = await supabase
+  if (upsertError) {
+    throw new AppError('Failed to record your interest.', 500, upsertError.message);
+  }
+
+  const [{ count: buyerInterestCount }, { count: totalInterest }] = await Promise.all([
+    supabase
       .from('contact_requests')
       .select('*', { count: 'exact', head: true })
       .eq('product_id', productId)
-      .eq('buyer_id', buyerId);
-
-    // count = 1 means this is their first time (we just inserted)
-    // count > 1 would mean duplicate, but upsert + ignoreDuplicates means it stays 1
-    // We send notification only if this is a fresh interest
-    if (count === 1) {
-      await supabase.from('notifications').insert({
-        user_id:    product.seller_id,
-        type:       'interest',
-        title:      '👀 Someone is interested!',
-        message:    `A buyer is interested in your listing: "${product.title}". Check your contact info is up to date.`,
-        product_id: productId,
-      });
-    }
-
-    // ── Get total interest count for this product ──
-    const { count: totalInterest } = await supabase
+      .eq('buyer_id', buyerId),
+    supabase
       .from('contact_requests')
       .select('*', { count: 'exact', head: true })
-      .eq('product_id', productId);
+      .eq('product_id', productId),
+  ]);
 
-    // ── Build the pre-filled message for the buyer to copy ──
-    // This message is shown to the buyer with a "Copy" button.
-    // They paste it into email/Instagram/Telegram when reaching out.
-    const copyMessage = `Hi ${product.seller.name}! I saw your listing "${product.title}" (₹${product.price}) on CampusKart and I'm interested. Is it still available?`;
+  if (buyerInterestCount === 1) {
+    await supabase.from('notifications').insert({
+      user_id: product.seller_id,
+      type: 'interest',
+      title: 'Someone is interested!',
+      message: `A buyer is interested in your listing "${product.title}".`,
+      product_id: productId,
+    });
+  }
 
-    // ── Return seller contact info ──
-    // This is what the ContactSeller page displays
-    return res.json({
+  const copyMessage = `Hi ${product.seller.name}! I saw your listing "${product.title}" (Rs. ${product.price}) on CampusKart and I'm interested. Is it still available?`;
+
+  return sendSuccess(res, {
+    message: 'Seller contact details fetched successfully.',
+    data: {
       product: {
-        id:    product.id,
+        id: product.id,
         title: product.title,
         price: product.price,
       },
-      seller: {
-        name:      product.seller.name,
-        email:     product.seller.email,      // Always present (required at registration)
-        instagram: product.seller.instagram,  // null if not set
-        telegram:  product.seller.telegram,   // null if not set
-        reddit:    product.seller.reddit,     // null if not set
-      },
-      copy_message:   copyMessage,
+      seller: product.seller,
+      copy_message: copyMessage,
       total_interest: totalInterest || 1,
-    });
+    },
+  });
+});
 
-  } catch (err) {
-    console.error('[showInterest] unexpected:', err.message);
-    return res.status(500).json({ error: 'Server error.' });
+export const getContactHistory = asyncHandler(async (req, res) => {
+  const { page, limit, from, to } = parsePagination(req.query);
+
+  const { data, error, count } = await supabase
+    .from('contact_requests')
+    .select(
+      `
+        id, created_at,
+        product:product_id (
+          id, title, price, category, status, image_urls, created_at
+        ),
+        seller:seller_id (
+          id, name, email, instagram, telegram, reddit
+        )
+      `,
+      { count: 'exact' }
+    )
+    .eq('buyer_id', req.user.id)
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  if (error) {
+    throw new AppError('Failed to fetch contact history.', 500, error.message);
   }
-};
 
-// ── getProductInterests ───────────────────────────────────────
-// GET /api/contact/:productId/interests
-// Protected — only the seller of this product can see this
-// Shows seller how many (and optionally who) are interested
-export const getProductInterests = async (req, res) => {
-  try {
-    const { productId } = req.params;
+  return sendSuccess(res, {
+    message: 'Contact history fetched successfully.',
+    data: data || [],
+    meta: {
+      pagination: buildPaginationMeta({ page, limit, total: count || 0 }),
+    },
+  });
+});
 
-    // Verify the requester is the seller of this product
-    const { data: product } = await supabase
-      .from('products')
-      .select('id, seller_id')
-      .eq('id', productId)
-      .single();
+export const getProductInterests = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const { page, limit, from, to } = parsePagination(req.query);
 
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found.' });
-    }
+  const { data: product, error: productError } = await supabase
+    .from('products')
+    .select('id, seller_id')
+    .eq('id', productId)
+    .maybeSingle();
 
-    if (product.seller_id !== req.user.id) {
-      return res.status(403).json({ error: 'Only the seller can view interests for this listing.' });
-    }
-
-    const { data, count, error } = await supabase
-      .from('contact_requests')
-      .select('id, created_at, buyer:buyer_id(id, name)', { count: 'exact' })
-      .eq('product_id', productId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      return res.status(500).json({ error: 'Failed to fetch interests.' });
-    }
-
-    return res.json({ count: count || 0, interests: data || [] });
-  } catch (err) {
-    console.error('[getProductInterests] error:', err.message);
-    return res.status(500).json({ error: 'Server error.' });
+  if (productError) {
+    throw new AppError('Failed to fetch product.', 500, productError.message);
   }
-};
+
+  if (!product) {
+    throw new AppError('Product not found.', 404);
+  }
+
+  if (product.seller_id !== req.user.id) {
+    throw new AppError('Only the seller can view interests for this listing.', 403);
+  }
+
+  const { data, count, error } = await supabase
+    .from('contact_requests')
+    .select('id, created_at, buyer:buyer_id(id, name, email)', { count: 'exact' })
+    .eq('product_id', productId)
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  if (error) {
+    throw new AppError('Failed to fetch interests.', 500, error.message);
+  }
+
+  return sendSuccess(res, {
+    message: 'Listing interests fetched successfully.',
+    data: data || [],
+    meta: {
+      pagination: buildPaginationMeta({ page, limit, total: count || 0 }),
+    },
+  });
+});

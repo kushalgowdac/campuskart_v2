@@ -28,6 +28,7 @@ import notificationsRouter from './routes/notifications.js';
 
 // Import background job
 import { startCleanupJob } from './jobs/cleanup.js';
+import { AppError } from './utils/http.js';
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -47,8 +48,13 @@ const PORT = process.env.PORT || 5000;
 //
 // In production: replace '*' with your actual frontend URL.
 // '*' means any domain can call your API — fine for dev, risky for prod.
+const allowedOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: allowedOrigins.length === 0 ? '*' : allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -68,9 +74,12 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // ============================================================
 app.get('/', (req, res) => {
   res.json({
-    status:  'ok',
+    success: true,
     message: 'CampusKart API v2 is running',
-    time:    new Date().toISOString(),
+    data: {
+      status: 'ok',
+      time: new Date().toISOString(),
+    },
   });
 });
 
@@ -94,7 +103,11 @@ app.use('/api/notifications', notificationsRouter);
 // ============================================================
 app.use((req, res) => {
   res.status(404).json({
-    error: `Route not found: ${req.method} ${req.originalUrl}`
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+    error: {
+      code: 'ROUTE_NOT_FOUND',
+    },
   });
 });
 
@@ -113,8 +126,15 @@ app.use((err, req, res, next) => {
     stack:   process.env.NODE_ENV === 'development' ? err?.stack : undefined,
   });
 
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error.',
+  const status = err instanceof AppError ? err.status : err.status || 500;
+
+  res.status(status).json({
+    success: false,
+    message: err.message || 'Internal server error.',
+    error: {
+      code: err.code || 'INTERNAL_SERVER_ERROR',
+      details: err instanceof AppError ? err.details : undefined,
+    },
   });
 });
 
