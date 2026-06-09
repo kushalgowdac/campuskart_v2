@@ -16,6 +16,7 @@
 // ============================================================
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import api from '../api';
 
 // Step 1: Create the context object
 // This is just an empty container — we fill it with the Provider below
@@ -56,6 +57,28 @@ export const AuthProvider = ({ children }) => {
   // Computed values — derived from user state
   const isLoggedIn = !!user;              // true if user is not null
   const isAdmin = user?.role === 'admin'; // true only for admin role
+
+  // Validate token on app load — refreshes user data from server
+  // Catches: role changed to admin in DB, deleted user
+  // Only clears token on 401 (expired/invalid), not on network/server errors
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    api.get('/api/auth/me')
+      .then(res => {
+        localStorage.setItem('user', JSON.stringify(res.data));
+        setUser(res.data);
+      })
+      .catch((err) => {
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+        // On other errors (network, 500, etc.) — keep existing localStorage user
+      });
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, login, logout, isLoggedIn, isAdmin }}>

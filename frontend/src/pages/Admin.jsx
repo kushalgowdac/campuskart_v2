@@ -1,32 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import useFetch from '../hooks/useFetch';
+import { mutate } from 'swr';
 import api from '../api';
 
 const Admin = () => {
   const [tab, setTab] = useState('pending');
-  const [pending, setPending] = useState([]);
-  const [analytics, setAnalytics] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [rejectReason, setRejectReason] = useState({});
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const [pendingRes, analyticsRes] = await Promise.all([
-          api.get('/api/admin/products/pending'),
-          api.get('/api/admin/analytics'),
-        ]);
-        setPending(pendingRes.data.items);
-        setAnalytics(analyticsRes.data);
-      } catch {}
-      finally { setLoading(false); }
-    };
-    fetchAll();
-  }, []);
+  const { data: pendingData, error: pendingError, isLoading: pendingLoading } = useFetch('/api/admin/products/pending');
+  const { data: analyticsData, error: analyticsError, isLoading: analyticsLoading } = useFetch('/api/admin/analytics');
+
+  const pending = pendingData?.items || [];
+  const analytics = analyticsData;
+  const loading = pendingLoading || analyticsLoading;
 
   const approve = async (id) => {
     try {
       await api.patch(`/api/admin/products/${id}/approve`);
-      setPending(prev => prev.filter(p => p.id !== id));
+      mutate('/api/admin/products/pending');
+      mutate('/api/admin/analytics');
     } catch (err) { alert(err.response?.data?.error || 'Failed'); }
   };
 
@@ -35,69 +27,111 @@ const Admin = () => {
     if (!reason || reason.trim().length < 5) return alert('Please enter a rejection reason (min 5 chars).');
     try {
       await api.patch(`/api/admin/products/${id}/reject`, { reason });
-      setPending(prev => prev.filter(p => p.id !== id));
+      mutate('/api/admin/products/pending');
+      mutate('/api/admin/analytics');
     } catch (err) { alert(err.response?.data?.error || 'Failed'); }
   };
 
-  if (loading) return <div style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>Loading...</div>;
+  if (loading) return (
+    <div className="label-caps" style={{ textAlign: 'center', padding: '6rem', color: 'var(--muted-foreground)' }}>
+      RETRIEVING ADMINISTRATIVE DATA...
+    </div>
+  );
+
+  if (pendingError || analyticsError) return (
+    <div className="brutalist-card" style={{ textAlign: 'center', padding: '6rem', color: '#ef4444', borderColor: '#ef4444' }}>
+      <span className="label-caps" style={{ color: '#ef4444' }}>FAILED TO LOAD ADMIN DATA. RETRYING...</span>
+    </div>
+  );
 
   return (
-    <div style={{ maxWidth: '900px', margin: '2rem auto', padding: '1.5rem' }}>
-      <h1 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.5rem' }}>Admin Panel</h1>
+    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+      <h1 className="section-title">ADMINISTRATIVE PORTAL //</h1>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '1.5rem', borderBottom: '1px solid #e5e7eb' }}>
-        {['pending', 'analytics'].map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{
-            padding: '8px 16px', border: 'none', background: 'none', cursor: 'pointer',
-            fontSize: '14px', fontWeight: 500, borderBottom: tab === t ? '2px solid #1d4ed8' : '2px solid transparent',
-            color: tab === t ? '#1d4ed8' : '#6b7280', textTransform: 'capitalize',
-          }}>{t === 'pending' ? `Pending (${pending.length})` : 'Analytics'}</button>
-        ))}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '2.5rem' }}>
+        {['pending', 'analytics'].map(t => {
+          const active = tab === t;
+          const label = t === 'pending' ? `PENDING ITEMS (${pending.length})` : 'ANALYTICS FEED';
+          return (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={active ? 'brutalist-btn brutalist-btn-primary' : 'brutalist-btn'}
+              style={{
+                padding: '0.5rem 1.5rem',
+                height: '42px',
+                minHeight: '42px',
+                fontSize: '0.8rem',
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Pending tab */}
       {tab === 'pending' && (
         pending.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>
-            <div style={{ fontSize: '3rem' }}>✅</div>
-            <p>All caught up! No pending listings.</p>
+          <div className="brutalist-card" style={{ textAlign: 'center', padding: '6rem 2rem' }}>
+            <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>✅</div>
+            <h3 className="card-title" style={{ marginBottom: '0.5rem' }}>ALL CLEAR</h3>
+            <p className="text-muted" style={{ fontSize: '0.9rem', textTransform: 'uppercase' }}>
+              NO LISTINGS ARE CURRENTLY AWAITING SYSTEM CLEARANCE.
+            </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {pending.map(p => (
-              <div key={p.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '16px' }}>
-                <div style={{ display: 'flex', gap: '14px' }}>
-                  <div style={{ width: '80px', height: '80px', background: '#f3f4f6', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
-                    {p.image_urls?.[0]
-                      ? <img src={p.image_urls[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem' }}>📦</div>
-                    }
+              <div key={p.id} className="brutalist-card" style={{ padding: '2rem' }}>
+                <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                  {/* Image */}
+                  <div style={{ width: '120px', height: '120px', background: '#18181b', border: '2px solid var(--border)', overflow: 'hidden', flexShrink: 0 }}>
+                    {p.image_urls?.[0] ? (
+                      <img src={p.image_urls[0]} alt={p.title} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem' }}>📦</div>
+                    )}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 600 }}>{p.title}</h3>
-                    <p style={{ margin: '0 0 2px', fontSize: '16px', fontWeight: 700, color: '#059669' }}>₹{p.price}</p>
-                    <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#6b7280' }}>
-                      {p.category} · by {p.seller?.name} ({p.seller?.email})
+                  
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: '280px' }}>
+                    <span className="brutalist-badge brutalist-badge-accent" style={{ marginBottom: '0.5rem' }}>
+                      {p.category.toUpperCase()}
+                    </span>
+                    <h3 className="card-title" style={{ fontSize: '1.4rem', margin: '0 0 4px', textTransform: 'uppercase' }}>{p.title}</h3>
+                    <p style={{ margin: '0 0 10px', fontSize: '1.25rem', fontWeight: 700, color: 'var(--foreground)' }}>₹{p.price}</p>
+                    <p className="label-caps" style={{ color: 'var(--muted-foreground)', fontSize: '0.75rem', marginBottom: '1rem' }}>
+                      POSTED BY: {p.seller?.name?.toUpperCase()} ({p.seller?.email?.toUpperCase()})
                     </p>
                     {p.description && (
-                      <p style={{ margin: '0 0 10px', fontSize: '13px', color: '#4b5563', lineHeight: 1.5 }}>{p.description}</p>
+                      <p style={{ margin: '0 0 1.5rem', fontSize: '0.95rem', color: 'var(--muted-foreground)', lineHeight: 1.5 }}>{p.description}</p>
                     )}
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <button onClick={() => approve(p.id)} style={{
-                        padding: '7px 16px', background: '#059669', color: 'white',
-                        border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, fontSize: '13px',
-                      }}>✓ Approve</button>
+                    
+                    {/* Decision row */}
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', borderTop: '2px solid var(--border)', paddingTop: '1.5rem' }}>
+                      <button
+                        onClick={() => approve(p.id)}
+                        className="brutalist-btn brutalist-btn-primary"
+                        style={{ padding: '0 1.25rem', height: '38px', minHeight: '38px', fontSize: '0.8rem', background: '#059669', borderColor: '#059669', color: 'white' }}
+                      >
+                        ✓ APPROVE
+                      </button>
                       <input
-                        placeholder="Rejection reason..."
+                        placeholder="REJECTION REASON (MIN 5 CHARS)..."
                         value={rejectReason[p.id] || ''}
                         onChange={e => setRejectReason(prev => ({ ...prev, [p.id]: e.target.value }))}
-                        style={{ flex: 1, minWidth: '160px', padding: '7px 10px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px' }}
+                        className="brutalist-input"
+                        style={{ flex: 1, minWidth: '160px', height: '38px' }}
                       />
-                      <button onClick={() => reject(p.id)} style={{
-                        padding: '7px 16px', background: '#dc2626', color: 'white',
-                        border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, fontSize: '13px',
-                      }}>✗ Reject</button>
+                      <button
+                        onClick={() => reject(p.id)}
+                        className="brutalist-btn brutalist-btn-danger"
+                        style={{ padding: '0 1.25rem', height: '38px', minHeight: '38px', fontSize: '0.8rem' }}
+                      >
+                        ✗ REJECT
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -110,28 +144,39 @@ const Admin = () => {
       {/* Analytics tab */}
       {tab === 'analytics' && analytics && (
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '20px', marginBottom: '3rem' }}>
             {[
-              { label: 'Total Users', value: analytics.users, icon: '👥' },
-              { label: 'Live Listings', value: analytics.products.live, icon: '🟢' },
-              { label: 'Pending Review', value: analytics.products.pending, icon: '⏳' },
-              { label: 'Sold', value: analytics.products.sold, icon: '✅' },
-              { label: 'Total Interests', value: analytics.total_interests, icon: '👀' },
+              { label: 'TOTAL USERS', value: analytics.users, icon: '👥' },
+              { label: 'LIVE LISTINGS', value: analytics.products.live, icon: '🟢' },
+              { label: 'PENDING REVIEW', value: analytics.products.pending, icon: '⏳' },
+              { label: 'SOLD ITEMS', value: analytics.products.sold, icon: '✅' },
+              { label: 'TOTAL INTERESTS', value: analytics.total_interests, icon: '👀' },
             ].map(stat => (
-              <div key={stat.label} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-                <div style={{ fontSize: '1.8rem', marginBottom: '6px' }}>{stat.icon}</div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#111827' }}>{stat.value}</div>
-                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>{stat.label}</div>
+              <div key={stat.label} className="brutalist-card" style={{ textAlign: 'center', padding: '1.5rem' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{stat.icon}</div>
+                <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--foreground)', letterSpacing: '-0.03em' }}>{stat.value}</div>
+                <div className="label-caps" style={{ color: 'var(--muted-foreground)', fontSize: '0.7rem', marginTop: '6px' }}>{stat.label}</div>
               </div>
             ))}
           </div>
 
-          <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '10px', color: '#374151' }}>Recent Listings</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <h3 className="section-title" style={{ fontSize: '1.2rem', marginBottom: '1.5rem' }}>RECENT USER SUBMISSIONS //</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {analytics.recent_listings.map(p => (
-              <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px' }}>
-                <span style={{ fontWeight: 500 }}>{p.title}</span>
-                <span style={{ color: '#6b7280' }}>{p.seller?.name} · {p.status}</span>
+              <div
+                key={p.id}
+                className="brutalist-card"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  alignItems: 'center',
+                }}
+              >
+                <span className="label-caps" style={{ fontWeight: 700, fontSize: '0.85rem' }}>{p.title.toUpperCase()}</span>
+                <span className="text-muted" style={{ fontSize: '0.8rem', textTransform: 'uppercase', fontWeight: 700 }}>
+                  {p.seller?.name} · {p.status}
+                </span>
               </div>
             ))}
           </div>

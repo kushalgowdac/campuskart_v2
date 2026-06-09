@@ -1,103 +1,205 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useFetch from '../hooks/useFetch';
+import { mutate } from 'swr';
 import api from '../api';
 
 const STATUS_COLORS = {
-  pending:  { bg: '#fffbeb', color: '#92400e', label: 'Pending Review' },
-  live:     { bg: '#f0fdf4', color: '#166534', label: 'Live' },
-  hidden:   { bg: '#f3f4f6', color: '#374151', label: 'Hidden' },
-  sold:     { bg: '#eff6ff', color: '#1e40af', label: 'Sold' },
-  rejected: { bg: '#fef2f2', color: '#991b1b', label: 'Rejected' },
-  expired:  { bg: '#f3f4f6', color: '#6b7280', label: 'Expired' },
+  pending:  { border: '#D97706', color: '#F59E0B', label: 'PENDING REVIEW' },
+  live:     { border: 'var(--foreground)', color: 'var(--foreground)', label: 'LIVE' },
+  hidden:   { border: '#3F3F46', color: '#A1A1AA', label: 'HIDDEN' },
+  sold:     { border: '#3F3F46', color: '#A1A1AA', label: 'SOLD' },
+  rejected: { border: '#EF4444', color: '#EF4444', label: 'REJECTED' },
+  expired:  { border: '#3F3F46', color: '#A1A1AA', label: 'EXPIRED' },
 };
 
 const Dashboard = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    api.get('/api/products/mine')
-      .then(res => setProducts(res.data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, error, isLoading } = useFetch('/api/products/mine');
+  const products = data?.items || [];
 
   const updateStatus = async (id, status) => {
     try {
       await api.patch(`/api/products/${id}/status`, { status });
-      setProducts(prev => prev.map(p => p.id === id ? { ...p, status } : p));
+      mutate('/api/products/mine');
     } catch (err) {
       alert(err.response?.data?.error || 'Failed to update.');
     }
   };
 
   const deleteProduct = async (id) => {
-    if (!confirm('Delete this listing permanently?')) return;
+    if (!confirm('DELETE THIS LISTING PERMANENTLY?')) return;
     try {
       await api.delete(`/api/products/${id}`);
-      setProducts(prev => prev.filter(p => p.id !== id));
+      mutate('/api/products/mine');
     } catch (err) {
       alert(err.response?.data?.error || 'Failed to delete.');
     }
   };
 
-  if (loading) return <div style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>Loading...</div>;
+  if (isLoading) return (
+    <div className="label-caps" style={{ textAlign: 'center', padding: '6rem', color: 'var(--muted-foreground)' }}>
+      RETRIEVING YOUR ACTIVE SPECS...
+    </div>
+  );
+
+  if (error) return (
+    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+      <div className="brutalist-card" style={{ textAlign: 'center', padding: '6rem', color: '#ef4444', borderColor: '#ef4444' }}>
+        <span className="label-caps" style={{ color: '#ef4444' }}>FAILED TO LOAD YOUR LISTINGS. RETRYING...</span>
+      </div>
+    </div>
+  );
 
   return (
-    <div style={{ maxWidth: '800px', margin: '2rem auto', padding: '1.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700 }}>My Listings</h1>
-        <button onClick={() => navigate('/sell')} style={{ padding: '8px 16px', background: '#1d4ed8', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}>
-          + New Listing
+    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+        <h1 className="section-title" style={{ margin: 0 }}>MY LISTINGS //</h1>
+        <button
+          onClick={() => navigate('/sell')}
+          className="brutalist-btn brutalist-btn-primary"
+          style={{ padding: '0.6rem 1.5rem', height: '44px', minHeight: '44px', display: 'flex', alignItems: 'center' }}
+        >
+          + CREATE NEW
         </button>
       </div>
 
       {products.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📭</div>
-          <p>No listings yet. <a href="/sell" style={{ color: '#1d4ed8' }}>Create one!</a></p>
+        <div className="brutalist-card" style={{ textAlign: 'center', padding: '6rem 2rem' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1.5rem' }}>📦</div>
+          <h3 className="card-title" style={{ marginBottom: '0.5rem' }}>NO LISTINGS YET</h3>
+          <p className="text-muted" style={{ fontSize: '0.9rem', textTransform: 'uppercase', marginBottom: '2rem' }}>
+            YOU HAVE NOT POSTED ANY OFFERINGS TO THE COMMERCE INDEX.
+          </p>
+          <button
+            onClick={() => navigate('/sell')}
+            className="brutalist-btn brutalist-btn-primary"
+            style={{ padding: '0.75rem 2rem' }}
+          >
+            POST YOUR FIRST LISTING
+          </button>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
           {products.map(p => {
             const s = STATUS_COLORS[p.status] || STATUS_COLORS.pending;
             return (
-              <div key={p.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '14px 16px', display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+              <div key={p.id} className="brutalist-card" style={{ display: 'flex', flexDirection: 'column', padding: 0 }}>
                 {/* Image */}
-                <div style={{ width: '72px', height: '72px', background: '#f3f4f6', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
-                  {p.image_urls?.[0]
-                    ? <img src={p.image_urls[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>📦</div>
-                  }
+                <div style={{ height: '180px', background: '#18181b', position: 'relative', borderBottom: '2px solid var(--border)' }}>
+                  {p.image_urls?.[0] ? (
+                    <img
+                      src={p.image_urls[0]}
+                      alt={p.title}
+                      loading="lazy"
+                      decoding="async"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem' }}>
+                      📦
+                    </div>
+                  )}
+                  {/* Interest indicator in corner */}
+                  {p.interest_count > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '10px',
+                      right: '10px',
+                      background: 'var(--foreground)',
+                      color: 'var(--background)',
+                      border: '1px solid var(--border)',
+                      padding: '3px 8px',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                    }}>
+                      🔥 {p.interest_count} INTERESTED
+                    </div>
+                  )}
                 </div>
 
-                {/* Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                    <h3 style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</h3>
-                    <span style={{ background: s.bg, color: s.color, fontSize: '11px', padding: '2px 8px', borderRadius: '20px', fontWeight: 500, flexShrink: 0 }}>{s.label}</span>
+                {/* Text info */}
+                <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ marginBottom: '10px' }}>
+                      <span className="label-caps" style={{
+                        border: `2px solid ${s.border}`,
+                        color: s.color,
+                        padding: '3px 8px',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        display: 'inline-block',
+                      }}>
+                        {s.label}
+                      </span>
+                    </div>
+                    <h3 className="card-title" style={{ margin: '0 0 6px', textTransform: 'uppercase', fontSize: '1.1rem' }}>
+                      {p.title}
+                    </h3>
+                    <p style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--foreground)', margin: '0 0 1.5rem' }}>
+                      ₹{p.price}
+                    </p>
                   </div>
-                  <p style={{ margin: '0 0 10px', fontSize: '15px', fontWeight: 700, color: '#059669' }}>₹{p.price}</p>
 
-                  {/* Action buttons */}
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {/* Actions row */}
+                  <div style={{
+                    borderTop: '2px solid var(--border)',
+                    paddingTop: '1rem',
+                    display: 'flex',
+                    gap: '8px',
+                    flexWrap: 'wrap',
+                  }}>
                     {p.status === 'live' && (
-                      <button onClick={() => updateStatus(p.id, 'hidden')} style={btnStyle('#f3f4f6', '#374151')}>Hide</button>
+                      <button
+                        onClick={() => updateStatus(p.id, 'hidden')}
+                        className="brutalist-btn"
+                        style={{ flex: 1, fontSize: '0.7rem', padding: '0.4rem', height: '32px', minHeight: '32px' }}
+                      >
+                        HIDE
+                      </button>
                     )}
                     {p.status === 'hidden' && (
-                      <button onClick={() => updateStatus(p.id, 'live')} style={btnStyle('#f0fdf4', '#166534')}>Unhide</button>
+                      <button
+                        onClick={() => updateStatus(p.id, 'live')}
+                        className="brutalist-btn"
+                        style={{ flex: 1, fontSize: '0.7rem', padding: '0.4rem', height: '32px', minHeight: '32px' }}
+                      >
+                        UNHIDE
+                      </button>
                     )}
                     {(p.status === 'live' || p.status === 'hidden') && (
-                      <button onClick={() => updateStatus(p.id, 'sold')} style={btnStyle('#eff6ff', '#1e40af')}>Mark Sold</button>
+                      <button
+                        onClick={() => updateStatus(p.id, 'sold')}
+                        className="brutalist-btn brutalist-btn-primary"
+                        style={{ flex: 1, fontSize: '0.7rem', padding: '0.4rem', height: '32px', minHeight: '32px' }}
+                      >
+                        MARK SOLD
+                      </button>
                     )}
                     {p.status !== 'sold' && (
-                      <button onClick={() => deleteProduct(p.id)} style={btnStyle('#fef2f2', '#991b1b')}>Delete</button>
+                      <button
+                        onClick={() => deleteProduct(p.id)}
+                        className="brutalist-btn brutalist-btn-danger"
+                        style={{ flex: 1, fontSize: '0.7rem', padding: '0.4rem', height: '32px', minHeight: '32px' }}
+                      >
+                        DELETE
+                      </button>
                     )}
                   </div>
 
                   {p.status === 'rejected' && (
-                    <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#991b1b' }}>Rejected — edit and resubmit</p>
+                    <div style={{
+                      border: '2px solid #EF4444',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      color: '#EF4444',
+                      padding: '8px',
+                      marginTop: '8px',
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      textAlign: 'center',
+                    }}>
+                      REJECTED — SYSTEM POLICY VIOLATION
+                    </div>
                   )}
                 </div>
               </div>
@@ -108,10 +210,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
-const btnStyle = (bg, color) => ({
-  padding: '5px 12px', background: bg, color, border: 'none',
-  borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 500,
-});
 
 export default Dashboard;

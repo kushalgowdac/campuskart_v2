@@ -1,9 +1,5 @@
-// ============================================================
-// pages/Login.jsx — Login and Register (toggled)
-// ============================================================
-
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
@@ -17,8 +13,6 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    // Computed property name: [e.target.name] dynamically sets the key
-    // So if input has name="email", it sets form.email = value
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
     setError(''); // clear error on any change
   };
@@ -26,7 +20,6 @@ const Login = () => {
   const handleSubmit = async () => {
     setError('');
 
-    // Basic validation
     if (!form.email || !form.password) {
       setError('Email and password are required.');
       return;
@@ -44,9 +37,8 @@ const Login = () => {
         : { email: form.email, password: form.password };
 
       const res = await api.post(endpoint, payload);
-      // res.data = { token, user: { id, name, email, role, ... } }
       login(res.data.token, res.data.user);
-      navigate('/'); // redirect to browse page after login
+      navigate(res.data.user.role === 'admin' ? '/admin' : '/');
     } catch (err) {
       setError(err.response?.data?.error || 'Something went wrong. Try again.');
     } finally {
@@ -56,105 +48,107 @@ const Login = () => {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: 'calc(100vh - 70px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#f9fafb',
+      background: 'var(--background)',
+      padding: '2rem 1rem',
     }}>
-      <div style={{
-        background: 'white',
-        padding: '2rem',
-        borderRadius: '16px',
-        border: '1px solid #e5e7eb',
+      <div className="brutalist-card" style={{
         width: '100%',
-        maxWidth: '400px',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+        maxWidth: '420px',
+        padding: '2.5rem 2rem',
       }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🛒</div>
-          <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700, color: '#111827' }}>
-            CampusKart
+        <div style={{ textAlign: 'left', marginBottom: '2rem' }}>
+          <h1 className="card-title" style={{ fontSize: '1.8rem', marginBottom: '0.25rem', letterSpacing: '-0.04em' }}>
+            CAMPUSKART //
           </h1>
-          <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: '14px' }}>
-            {isRegister ? 'Create your account' : 'Welcome back'}
+          <p className="label-caps" style={{ color: 'var(--muted-foreground)', fontSize: '0.8rem' }}>
+            {isRegister ? 'CREATE AN ACCOUNT' : 'AUTHENTICATE SESSION'}
           </p>
         </div>
 
         {/* Toggle */}
         <div style={{
           display: 'flex',
-          background: '#f3f4f6',
-          borderRadius: '8px',
-          padding: '4px',
-          marginBottom: '1.5rem',
+          gap: '8px',
+          marginBottom: '2rem',
         }}>
-          {['Login', 'Register'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => { setIsRegister(tab === 'Register'); setError(''); }}
-              style={{
-                flex: 1,
-                padding: '8px',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: 500,
-                background: (tab === 'Register') === isRegister ? 'white' : 'transparent',
-                color: (tab === 'Register') === isRegister ? '#111827' : '#6b7280',
-                boxShadow: (tab === 'Register') === isRegister ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                transition: 'all 0.15s',
-              }}
-            >
-              {tab}
-            </button>
-          ))}
+          {['Login', 'Register'].map((tab) => {
+            const active = (tab === 'Register') === isRegister;
+            return (
+              <button
+                key={tab}
+                onClick={() => { setIsRegister(tab === 'Register'); setError(''); }}
+                className={active ? 'brutalist-btn brutalist-btn-primary' : 'brutalist-btn'}
+                style={{
+                  flex: 1,
+                  padding: '0.5rem',
+                  height: '40px',
+                  minHeight: '40px',
+                  fontSize: '0.8rem',
+                }}
+              >
+                {tab.toUpperCase()}
+              </button>
+            );
+          })}
         </div>
 
         {/* Form fields */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {isRegister && (
-            <input
-              name="name"
-              placeholder="Full name"
-              value={form.name}
-              onChange={handleChange}
-              style={inputStyle}
-            />
+            <div>
+              <label className="label-caps" style={{ marginBottom: '0.25rem', display: 'block' }}>FULL NAME</label>
+              <input
+                name="name"
+                placeholder="YOUR NAME"
+                value={form.name}
+                onChange={handleChange}
+                className="brutalist-input"
+              />
+            </div>
           )}
-          <input
-            name="email"
-            type="email"
-            placeholder="Email address"
-            value={form.email}
-            onChange={handleChange}
-            style={inputStyle}
-            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-          />
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            style={inputStyle}
-            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-          />
+          <div>
+            <label className="label-caps" style={{ marginBottom: '0.25rem', display: 'block' }}>EMAIL ADDRESS</label>
+            <input
+              name="email"
+              type="email"
+              placeholder="ENTER EMAIL"
+              value={form.email}
+              onChange={handleChange}
+              className="brutalist-input"
+              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+            />
+          </div>
+          <div>
+            <label className="label-caps" style={{ marginBottom: '0.25rem', display: 'block' }}>PASSWORD</label>
+            <input
+              name="password"
+              type="password"
+              placeholder="ENTER PASSWORD"
+              value={form.password}
+              onChange={handleChange}
+              className="brutalist-input"
+              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+            />
+          </div>
         </div>
 
         {/* Error message */}
         {error && (
-          <p style={{
-            color: '#dc2626',
-            fontSize: '13px',
-            margin: '12px 0 0',
-            padding: '8px 12px',
-            background: '#fef2f2',
-            borderRadius: '6px',
+          <p className="label-caps" style={{
+            color: '#ef4444',
+            margin: '1.5rem 0 0',
+            padding: '0.75rem',
+            border: '2px solid #ef4444',
+            background: 'rgba(239, 68, 68, 0.1)',
+            fontSize: '0.75rem',
+            textAlign: 'center',
           }}>
-            {error}
+            {error.toUpperCase()}
           </p>
         )}
 
@@ -162,35 +156,18 @@ const Login = () => {
         <button
           onClick={handleSubmit}
           disabled={loading}
+          className="brutalist-btn brutalist-btn-primary"
           style={{
             width: '100%',
-            padding: '12px',
-            background: loading ? '#93c5fd' : '#1d4ed8',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '15px',
-            fontWeight: 600,
-            cursor: loading ? 'not-allowed' : 'pointer',
-            marginTop: '16px',
-            transition: 'background 0.15s',
+            marginTop: '2rem',
+            height: '50px',
           }}
         >
-          {loading ? 'Please wait...' : isRegister ? 'Create Account' : 'Login'}
+          {loading ? 'PROCESSING...' : isRegister ? 'CREATE ACCOUNT' : 'LOGIN'}
         </button>
       </div>
     </div>
   );
-};
-
-const inputStyle = {
-  padding: '10px 14px',
-  border: '1px solid #e5e7eb',
-  borderRadius: '8px',
-  fontSize: '14px',
-  outline: 'none',
-  width: '100%',
-  boxSizing: 'border-box',
 };
 
 export default Login;

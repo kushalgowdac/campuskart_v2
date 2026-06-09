@@ -1,16 +1,3 @@
-// ============================================================
-// components/ProductCard.jsx — Reusable product card
-// ============================================================
-// WHY a separate component?
-// The Browse page shows many products in a grid. Each card looks
-// the same — image, title, price, category, seller name.
-// Instead of repeating that HTML 50 times, we define it once here
-// and reuse it: products.map(p => <ProductCard product={p} />)
-//
-// This is the React component model — build small reusable pieces,
-// compose them into pages. Same as functions in regular programming.
-// ============================================================
-
 import { useNavigate } from 'react-router-dom';
 
 const ProductCard = ({ product }) => {
@@ -29,38 +16,29 @@ const ProductCard = ({ product }) => {
   const daysAgo = (dateStr) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    if (days === 0) return 'Today';
-    if (days === 1) return '1 day ago';
-    return `${days} days ago`;
+    if (days === 0) return 'TODAY';
+    if (days === 1) return '1 DAY AGO';
+    return `${days} DAYS AGO`;
   };
 
   return (
     <div
       onClick={() => navigate(`/product/${product.id}`)}
+      className="brutalist-card interactive"
       style={{
-        background: 'white',
-        border: '1px solid #e5e7eb',
-        borderRadius: '12px',
         overflow: 'hidden',
         cursor: 'pointer',
-        transition: 'transform 0.15s, box-shadow 0.15s',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)';
+        padding: 0,
       }}
     >
       {/* Product image */}
-      <div style={{ height: '180px', background: '#f3f4f6', overflow: 'hidden' }}>
+      <div style={{ height: '200px', background: '#18181b', overflow: 'hidden', borderBottom: '2px solid var(--border)' }}>
         {product.image_urls?.[0] ? (
           <img
             src={product.image_urls[0]}
             alt={product.title}
+            loading="lazy"
+            decoding="async"
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         ) : (
@@ -69,7 +47,7 @@ const ProductCard = ({ product }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '2.5rem',
+            fontSize: '3rem',
           }}>
             📦
           </div>
@@ -77,38 +55,29 @@ const ProductCard = ({ product }) => {
       </div>
 
       {/* Card content */}
-      <div style={{ padding: '12px' }}>
+      <div style={{ padding: '1.25rem' }}>
         {/* Category badge */}
-        <span style={{
-          fontSize: '11px',
-          background: '#eff6ff',
-          color: '#1d4ed8',
-          padding: '2px 8px',
-          borderRadius: '20px',
-          fontWeight: 500,
-        }}>
+        <span className="brutalist-badge" style={{ marginBottom: '0.75rem' }}>
           {product.category}
         </span>
 
         {/* Title */}
-        <h3 style={{
-          margin: '8px 0 4px',
-          fontSize: '14px',
-          fontWeight: 600,
-          color: '#111827',
+        <h3 className="card-title" style={{
+          margin: '0 0 6px',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
+          textTransform: 'uppercase',
         }}>
           {product.title}
         </h3>
 
         {/* Price */}
-        <p style={{
-          fontSize: '16px',
+        <p className="card-price" style={{
+          fontSize: '1.25rem',
           fontWeight: 700,
-          color: '#059669',
-          margin: '0 0 8px',
+          color: 'var(--foreground)',
+          margin: '0 0 12px',
         }}>
           {formatPrice(product.price)}
         </p>
@@ -117,11 +86,10 @@ const ProductCard = ({ product }) => {
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          fontSize: '12px',
-          color: '#6b7280',
+          fontSize: '0.75rem',
         }}>
-          <span>👤 {product.seller?.name || 'Unknown'}</span>
-          <span>{daysAgo(product.created_at)}</span>
+          <span className="card-seller text-muted" style={{ fontWeight: 700, textTransform: 'uppercase' }}>👤 {product.seller?.name || 'UNKNOWN'}</span>
+          <span className="card-date text-muted" style={{ fontWeight: 700 }}>{daysAgo(product.created_at)}</span>
         </div>
       </div>
     </div>

@@ -1,13 +1,3 @@
-// ============================================================
-// components/Navbar.jsx
-// ============================================================
-// The top navigation bar shown on every page.
-// Shows different options based on auth state:
-//   Logged out: Browse, Login
-//   Logged in:  Browse, Sell, My Listings, notification bell, Logout
-//   Admin:      + Admin panel link
-// ============================================================
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -17,9 +7,7 @@ const Navbar = () => {
   const { user, isLoggedIn, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Fetch unread notification count on mount and every 30 seconds
   useEffect(() => {
     if (!isLoggedIn) return;
 
@@ -28,13 +16,13 @@ const Navbar = () => {
         const res = await api.get('/api/notifications');
         setUnreadCount(res.data.unread_count || 0);
       } catch {
-        // Silently fail — notifications are not critical
+        // Silently fail
       }
     };
 
     fetchUnread();
-    const interval = setInterval(fetchUnread, 30000); // poll every 30s
-    return () => clearInterval(interval); // cleanup on unmount
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
   }, [isLoggedIn]);
 
   const handleLogout = () => {
@@ -44,52 +32,58 @@ const Navbar = () => {
 
   return (
     <nav style={{
-      background: '#ffffff',
-      borderBottom: '1px solid #e5e7eb',
+      background: 'var(--background)',
+      borderBottom: '2px solid var(--border)',
       padding: '0 1.5rem',
-      height: '60px',
+      height: '70px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
     }}>
       {/* Logo */}
       <Link to="/" style={{ textDecoration: 'none' }}>
-        <span style={{ fontWeight: 700, fontSize: '1.2rem', color: '#1d4ed8' }}>
-          🛒 CampusKart
+        <span style={{ fontWeight: 700, fontSize: '1.4rem', color: 'var(--foreground)', letterSpacing: '-0.04em', textTransform: 'uppercase' }}>
+          CAMPUSKART //
         </span>
       </Link>
 
       {/* Nav links */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <Link to="/" style={linkStyle}>Browse</Link>
+        <Link to="/" className="brutalist-btn" style={{ padding: '0.4rem 1rem', height: '38px', minHeight: '38px', fontSize: '0.8rem' }}>
+          BROWSE
+        </Link>
 
-        {isLoggedIn && (
+        {isLoggedIn ? (
           <>
-            <Link to="/sell" style={linkStyle}>+ Sell</Link>
-            <Link to="/dashboard" style={linkStyle}>My Listings</Link>
+            <Link to="/sell" className="brutalist-btn brutalist-btn-primary" style={{ padding: '0.4rem 1rem', height: '38px', minHeight: '38px', fontSize: '0.8rem' }}>
+              + SELL
+            </Link>
+            <Link to="/dashboard" className="brutalist-btn" style={{ padding: '0.4rem 1rem', height: '38px', minHeight: '38px', fontSize: '0.8rem' }}>
+              MY LISTINGS
+            </Link>
             {isAdmin && (
-              <Link to="/admin" style={{ ...linkStyle, color: '#dc2626' }}>
-                Admin
+              <Link to="/admin" className="brutalist-btn brutalist-btn-danger" style={{ padding: '0.4rem 1rem', height: '38px', minHeight: '38px', fontSize: '0.8rem' }}>
+                ADMIN
               </Link>
             )}
+            
             {/* Notification bell */}
-            <Link to="/notifications" style={{ position: 'relative', textDecoration: 'none' }}>
+            <Link to="/notifications" style={{ position: 'relative', textDecoration: 'none', display: 'flex', alignItems: 'center', margin: '0 0.5rem' }}>
               <span style={{ fontSize: '1.2rem' }}>🔔</span>
               {unreadCount > 0 && (
                 <span style={{
                   position: 'absolute',
-                  top: '-6px',
-                  right: '-8px',
-                  background: '#dc2626',
-                  color: 'white',
-                  borderRadius: '50%',
-                  width: '18px',
-                  height: '18px',
-                  fontSize: '11px',
+                  top: '-8px',
+                  right: '-10px',
+                  background: 'var(--foreground)',
+                  color: 'var(--background)',
+                  border: '1px solid var(--border)',
+                  width: '16px',
+                  height: '16px',
+                  fontSize: '9px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -99,43 +93,24 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
-            <span style={{ fontSize: '13px', color: '#6b7280' }}>
+
+            <Link to="/profile" className="text-muted" style={{ fontSize: '0.8rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em', textDecoration: 'none' }}>
               Hi, {user?.name?.split(' ')[0]}
-            </span>
-            <button onClick={handleLogout} style={btnStyle}>
-              Logout
+            </Link>
+            <button onClick={handleLogout} className="brutalist-btn" style={{ padding: '0.4rem 1rem', height: '38px', minHeight: '38px', fontSize: '0.8rem' }}>
+              LOGOUT
             </button>
           </>
-        )}
-
-        {!isLoggedIn && (
+        ) : (
           <Link to="/login">
-            <button style={{ ...btnStyle, background: '#1d4ed8', color: 'white' }}>
-              Login
+            <button className="brutalist-btn brutalist-btn-primary" style={{ padding: '0.4rem 1.2rem', height: '38px', minHeight: '38px', fontSize: '0.8rem' }}>
+              LOGIN
             </button>
           </Link>
         )}
       </div>
     </nav>
   );
-};
-
-const linkStyle = {
-  textDecoration: 'none',
-  color: '#374151',
-  fontSize: '14px',
-  fontWeight: 500,
-};
-
-const btnStyle = {
-  padding: '6px 14px',
-  borderRadius: '6px',
-  border: '1px solid #e5e7eb',
-  background: 'white',
-  cursor: 'pointer',
-  fontSize: '13px',
-  fontWeight: 500,
-  color: '#374151',
 };
 
 export default Navbar;

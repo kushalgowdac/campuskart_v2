@@ -26,9 +26,9 @@ export const showInterest = async (req, res) => {
     const { data: product, error: productError } = await supabase
       .from('products')
       .select(`
-        id, title, price, status, seller_id,
+        id, title, price, status, seller_id, notes_to_buyer,
         seller:seller_id (
-          id, name, email, instagram, telegram, reddit
+          id, name, email, instagram, telegram, reddit, gmail, meeting_note
         )
       `)
       .eq('id', productId)
@@ -109,16 +109,19 @@ export const showInterest = async (req, res) => {
     // This is what the ContactSeller page displays
     return res.json({
       product: {
-        id:    product.id,
-        title: product.title,
-        price: product.price,
+        id:            product.id,
+        title:         product.title,
+        price:         product.price,
+        notes_to_buyer: product.notes_to_buyer,
       },
       seller: {
-        name:      product.seller.name,
-        email:     product.seller.email,      // Always present (required at registration)
-        instagram: product.seller.instagram,  // null if not set
-        telegram:  product.seller.telegram,   // null if not set
-        reddit:    product.seller.reddit,     // null if not set
+        name:        product.seller.name,
+        email:       product.seller.email,
+        instagram:   product.seller.instagram,
+        telegram:    product.seller.telegram,
+        reddit:      product.seller.reddit,
+        gmail:       product.seller.gmail,
+        meeting_note: product.seller.meeting_note,
       },
       copy_message:   copyMessage,
       total_interest: totalInterest || 1,

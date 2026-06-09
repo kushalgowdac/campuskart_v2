@@ -26,61 +26,56 @@ import { supabase } from '../db/supabase.js';
 import { uploadMultiple, deleteMultiple } from '../utils/cloudinary.js';
 
 // ── listProducts ─────────────────────────────────────────────
-// GET /api/products?category=Books&q=chemistry
+// GET /api/products?category=Books&q=chemistry&limit=20&offset=0
 // Public — no auth needed. Only returns 'live' products.
-// Supports: category filter, text search, price sort
+// Supports: category filter, text search, price sort, pagination
 export const listProducts = async (req, res) => {
   try {
-    const { category, q, sort } = req.query;
+    const { category, q, sort, limit = 20, offset = 0 } = req.query;
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 20, 1), 50);
+    const safeOffset = Math.max(parseInt(offset) || 0, 0);
 
-    // Build query step by step — Supabase SDK is chainable like this.
-    // Each .eq(), .ilike(), .order() adds to the query.
-    // Nothing runs until we await the final result.
     let query = supabase
       .from('products')
-      // The * gets all product columns.
-      // seller:users(...) does the JOIN — fetches seller info
-      // via the foreign key products.seller_id → users.id
-      // This replaces: LEFT JOIN users u ON products.seller_id = u.id
       .select(`
         id, title, description, price, category,
-        image_urls, status, created_at, expires_at,
+        image_urls, status, created_at, expires_at, notes_to_buyer,
         seller:seller_id (
-          id, name, email, instagram, telegram, reddit
+          id, name, email, instagram, telegram, reddit, gmail, meeting_note
         )
-      `)
-      .eq('status', 'live')  // Only show approved products to public
-      .order('created_at', { ascending: false }); // Newest first
+      `, { count: 'exact' })
+      .eq('status', 'live')
+      .order('created_at', { ascending: false });
 
-    // Apply category filter if provided
-    // ?category=Books → AND category = 'Books'
     if (category && category !== 'All') {
       query = query.eq('category', category);
     }
 
-    // Full text search on title
-    // ilike = case-insensitive LIKE
-    // %term% means "contains term anywhere"
-    // ?q=chemistry → AND title ILIKE '%chemistry%'
     if (q && q.trim()) {
       query = query.ilike('title', `%${q.trim()}%`);
     }
 
-    // Price sorting
     if (sort === 'price_asc') {
       query = query.order('price', { ascending: true });
     } else if (sort === 'price_desc') {
       query = query.order('price', { ascending: false });
     }
 
-    const { data, error } = await query;
+    query = query.range(safeOffset, safeOffset + safeLimit - 1);
+
+    const { data, error, count } = await query;
 
     if (error) {
       console.error('[listProducts] error:', error.message);
       return res.status(500).json({ error: 'Failed to fetch products.' });
     }
 
-    return res.json(data || []);
+    return res.json({
+      items: data || [],
+      total: count || 0,
+      limit: safeLimit,
+      offset: safeOffset,
+    });
   } catch (err) {
     console.error('[listProducts] unexpected error:', err.message);
     return res.status(500).json({ error: 'Server error.' });
@@ -93,21 +88,26 @@ export const listProducts = async (req, res) => {
 // Used in the seller dashboard
 export const getMyProducts = async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { limit = 50, offset = 0 } = req.query;
+    const safeLimit = Math.min(Math.max(parseInt(limit) || 50, 1), 100);
+    const safeOffset = Math.max(parseInt(offset) || 0, 0);
+
+    const { data, error, count } = await supabase
       .from('products')
       .select(`
         id, title, description, price, category,
         image_urls, status, created_at, expires_at, approved_by
-      `)
-      .eq('seller_id', req.user.id)  // req.user.id from JWT — secure
-      .order('created_at', { ascending: false });
+      `, { count: 'exact' })
+      .eq('seller_id', req.user.id)
+      .order('created_at', { ascending: false })
+      .range(safeOffset, safeOffset + safeLimit - 1);
 
     if (error) {
       console.error('[getMyProducts] error:', error.message);
       return res.status(500).json({ error: 'Failed to fetch your listings.' });
     }
 
-    return res.json(data || []);
+    return res.json({ items: data || [], total: count || 0 });
   } catch (err) {
     console.error('[getMyProducts] unexpected:', err.message);
     return res.status(500).json({ error: 'Server error.' });
@@ -126,9 +126,9 @@ export const getProductById = async (req, res) => {
       .from('products')
       .select(`
         id, title, description, price, category,
-        image_urls, status, created_at, expires_at,
+        image_urls, status, created_at, expires_at, notes_to_buyer,
         seller:seller_id (
-          id, name, email, instagram, telegram, reddit
+          id, name, email, instagram, telegram, reddit, gmail, meeting_note
         )
       `)
       .eq('id', id)
@@ -163,6 +163,7 @@ export const createProduct = async (req, res) => {
       description,
       price,
       category,
+      notes_to_buyer,
       images, // array of base64 strings from frontend
     } = req.body;
 
@@ -198,14 +199,15 @@ export const createProduct = async (req, res) => {
     const { data: newProduct, error: insertError } = await supabase
       .from('products')
       .insert({
-        seller_id:   req.user.id,          // FROM JWT — secure
-        title:       title.trim(),
-        description: description?.trim() || null,
-        price:       Number(price),
-        category:    category || 'Other',
-        image_urls:  imageUrls,
-        public_ids:  publicIds,
-        status:      'pending',             // Always starts as pending — admin must approve
+        seller_id:      req.user.id,          // FROM JWT — secure
+        title:          title.trim(),
+        description:    description?.trim() || null,
+        price:          Number(price),
+        category:       category || 'Other',
+        notes_to_buyer: notes_to_buyer?.trim() || null,
+        image_urls:     imageUrls,
+        public_ids:     publicIds,
+        status:         'pending',             // Always starts as pending — admin must approve
       })
       .select()
       .single();
@@ -251,7 +253,7 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, price, category, images } = req.body;
+    const { title, description, price, category, notes_to_buyer, images } = req.body;
 
     // ── Verify ownership ──
     // First fetch the product to check seller_id matches req.user.id
@@ -299,6 +301,7 @@ export const updateProduct = async (req, res) => {
       ...(description !== undefined && { description: description?.trim() || null }),
       ...(price       !== undefined && { price: Number(price) }),
       ...(category    && { category }),
+      ...(notes_to_buyer !== undefined && { notes_to_buyer: notes_to_buyer?.trim() || null }),
       ...(imageUrls   && { image_urls: imageUrls, public_ids: publicIds }),
       // Editing resets to pending — admin needs to re-approve changed listings
       status: 'pending',

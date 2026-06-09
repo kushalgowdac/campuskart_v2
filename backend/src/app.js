@@ -18,6 +18,7 @@ dotenv.config(); // Load .env file FIRST — before anything else imports env va
 
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 
 // Import all route files
 import authRouter          from './routes/auth.js';
@@ -37,6 +38,23 @@ const PORT = process.env.PORT || 5000;
 // Middleware registered here runs on EVERY request before routes.
 // Order matters — they run top to bottom.
 // ============================================================
+
+// ── Compression ─────────────────────────────────────────────
+// Compresses all responses using gzip/brotli.
+// Reduces response size by ~70% for JSON payloads.
+// Must be before routes so all responses are compressed.
+app.use(compression());
+
+// ── No-Cache for API routes ─────────────────────────────────
+// All API responses must be fresh — no stale data for admin or browse.
+// Browser will always revalidate with the server.
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.set('Surrogate-Control', 'no-store');
+  next();
+});
 
 // ── CORS ──────────────────────────────────────────────────────
 // CORS = Cross-Origin Resource Sharing
@@ -72,6 +90,15 @@ app.get('/', (req, res) => {
     message: 'CampusKart API v2 is running',
     time:    new Date().toISOString(),
   });
+});
+
+// ============================================================
+// HEALTH ENDPOINT (for cron keep-alive pings)
+// Dedicated /health route for Vercel cron jobs and uptime monitors.
+// Returns lightweight JSON — no DB query needed.
+// ============================================================
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: Date.now() });
 });
 
 // ============================================================

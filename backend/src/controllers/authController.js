@@ -138,7 +138,7 @@ export const login = async (req, res) => {
     // But we WON'T include it in the response.
     const { data: user, error: fetchError } = await supabase
       .from('users')
-      .select('id, name, email, password, role, instagram, telegram, reddit')
+      .select('id, name, email, password, role, instagram, telegram, reddit, gmail, meeting_note')
       .eq('email', normalizedEmail)
       .single();
 
@@ -186,7 +186,7 @@ export const getMe = async (req, res) => {
     // req.user.id was set by verifyToken middleware from the JWT payload
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, name, email, role, instagram, telegram, reddit, created_at')
+      .select('id, name, email, role, instagram, telegram, reddit, gmail, meeting_note, created_at')
       .eq('id', req.user.id)
       .single();
 
@@ -207,20 +207,20 @@ export const getMe = async (req, res) => {
 // Body: { name, instagram, telegram, reddit }
 export const updateProfile = async (req, res) => {
   try {
-    const { name, instagram, telegram, reddit } = req.body;
+    const { name, instagram, telegram, reddit, gmail, meeting_note } = req.body;
 
     const { data: updated, error } = await supabase
       .from('users')
       .update({
-        // Only update fields that were actually sent
-        // If instagram is undefined, it won't be included in the update
         ...(name      && { name: name.trim() }),
         ...(instagram !== undefined && { instagram: instagram || null }),
         ...(telegram  !== undefined && { telegram:  telegram  || null }),
         ...(reddit    !== undefined && { reddit:    reddit    || null }),
+        ...(gmail     !== undefined && { gmail:     gmail     || null }),
+        ...(meeting_note !== undefined && { meeting_note: meeting_note || null }),
       })
       .eq('id', req.user.id)
-      .select('id, name, email, role, instagram, telegram, reddit')
+      .select('id, name, email, role, instagram, telegram, reddit, gmail, meeting_note')
       .single();
 
     if (error) {
