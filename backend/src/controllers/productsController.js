@@ -165,6 +165,11 @@ export const createProduct = async (req, res) => {
       category,
       notes_to_buyer,
       images, // array of base64 strings from frontend
+      instagram,
+      telegram,
+      gmail,
+      reddit,
+      meeting_note,
     } = req.body;
 
     // ── Validate required fields ──
@@ -217,6 +222,28 @@ export const createProduct = async (req, res) => {
       // If DB insert fails but we already uploaded images, clean them up
       if (publicIds.length > 0) await deleteMultiple(publicIds);
       return res.status(500).json({ error: 'Failed to create listing.' });
+    }
+
+    // ── Update seller's profile with contact details if provided ──
+    // This allows users to set contact info during listing creation
+    const contactUpdates = {
+      ...(instagram    !== undefined && { instagram: instagram || null }),
+      ...(telegram     !== undefined && { telegram: telegram || null }),
+      ...(gmail        !== undefined && { gmail: gmail || null }),
+      ...(reddit       !== undefined && { reddit: reddit || null }),
+      ...(meeting_note !== undefined && { meeting_note: meeting_note || null }),
+    };
+
+    if (Object.keys(contactUpdates).length > 0) {
+      const { error: profileError } = await supabase
+        .from('users')
+        .update(contactUpdates)
+        .eq('id', req.user.id);
+
+      if (profileError) {
+        console.error('[createProduct] Profile update error:', profileError.message);
+        // Non-critical — listing was created, just log the error
+      }
     }
 
     // ── Notify admins that a new listing needs review ──

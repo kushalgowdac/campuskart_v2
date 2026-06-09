@@ -1,12 +1,21 @@
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
 const CATEGORIES = ['Books', 'Electronics', 'Clothing', 'Stationery', 'Sports', 'Other'];
 
 const Sell = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [form, setForm] = useState({ title: '', description: '', price: '', category: 'Books', notes_to_buyer: '' });
+  const [contactForm, setContactForm] = useState({
+    instagram:    user?.instagram || '',
+    telegram:     user?.telegram || '',
+    gmail:        user?.gmail || '',
+    reddit:       user?.reddit || '',
+    meeting_note: user?.meeting_note || '',
+  });
   const [images, setImages] = useState([]);
   const [previews, setPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,6 +24,7 @@ const Sell = () => {
   const fileInputRef = useRef(null);
 
   const handleChange = e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleContactChange = e => setContactForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
   const processFiles = useCallback((files) => {
     const remaining = 4 - images.length;
@@ -52,7 +62,12 @@ const Sell = () => {
     if (!form.title || !form.price) return setError('Title and price are required.');
     setLoading(true); setError('');
     try {
-      await api.post('/api/products', { ...form, price: Number(form.price), images });
+      await api.post('/api/products', {
+        ...form,
+        price: Number(form.price),
+        images,
+        ...contactForm,
+      });
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create listing.');
@@ -115,6 +130,73 @@ const Sell = () => {
           <p className="label-caps" style={{ fontSize: '0.6rem', color: 'var(--muted-foreground)', marginTop: '0.3rem' }}>
             PREFERRED CONTACT METHOD, TIMING, MEETUP SPOT, PAYMENT TERMS — ANYTHING BUYERS SHOULD KNOW
           </p>
+        </div>
+
+        {/* Contact Details Section */}
+        <div style={{ borderTop: '2px solid var(--border)', paddingTop: '1.5rem' }}>
+          <p className="label-caps" style={{ fontSize: '0.8rem', marginBottom: '0.5rem', fontWeight: 700 }}>
+            CONTACT DETAILS — OPTIONAL
+          </p>
+          <p className="label-caps" style={{ fontSize: '0.65rem', color: 'var(--muted-foreground)', marginBottom: '1rem', lineHeight: 1.4 }}>
+            FILL IN YOUR CONTACT HANDLES SO BUYERS CAN REACH YOU. THESE WILL BE SAVED TO YOUR PROFILE.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div>
+              <label className="label-caps" style={{ marginBottom: '0.4rem', display: 'block', fontSize: '0.7rem' }}>📸 INSTAGRAM</label>
+              <div style={{ position: 'relative' }}>
+                <span className="label-caps" style={{ position: 'absolute', left: '0', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted-foreground)', fontSize: '0.9rem', fontWeight: 700 }}>@</span>
+                <input name="instagram" value={contactForm.instagram} onChange={handleContactChange} placeholder="USERNAME" className="brutalist-input" style={{ paddingLeft: '20px' }} />
+              </div>
+            </div>
+
+            <div>
+              <label className="label-caps" style={{ marginBottom: '0.4rem', display: 'block', fontSize: '0.7rem' }}>✈️ TELEGRAM</label>
+              <div style={{ position: 'relative' }}>
+                <span className="label-caps" style={{ position: 'absolute', left: '0', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted-foreground)', fontSize: '0.9rem', fontWeight: 700 }}>@</span>
+                <input name="telegram" value={contactForm.telegram} onChange={handleContactChange} placeholder="USERNAME" className="brutalist-input" style={{ paddingLeft: '20px' }} />
+              </div>
+            </div>
+
+            <div>
+              <label className="label-caps" style={{ marginBottom: '0.4rem', display: 'block', fontSize: '0.7rem' }}>📧 ALTERNATE EMAIL / GMAIL</label>
+              <input name="gmail" value={contactForm.gmail} onChange={handleContactChange} placeholder="you@gmail.com" className="brutalist-input" />
+            </div>
+
+            <div>
+              <label className="label-caps" style={{ marginBottom: '0.4rem', display: 'block', fontSize: '0.7rem' }}>🤖 REDDIT</label>
+              <div style={{ position: 'relative' }}>
+                <span className="label-caps" style={{ position: 'absolute', left: '0', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted-foreground)', fontSize: '0.9rem', fontWeight: 700 }}>u/</span>
+                <input name="reddit" value={contactForm.reddit} onChange={handleContactChange} placeholder="USERNAME" className="brutalist-input" style={{ paddingLeft: '24px' }} />
+              </div>
+            </div>
+
+            <div>
+              <label className="label-caps" style={{ marginBottom: '0.4rem', display: 'block', fontSize: '0.7rem' }}>📍 MEETING PREFERENCE</label>
+              <textarea
+                name="meeting_note"
+                value={contactForm.meeting_note}
+                onChange={handleContactChange}
+                placeholder="E.G. I USUALLY MEET AT HOSTEL 3 BLOCK. CAMPUS PICKUP ONLY."
+                rows={2}
+                className="brutalist-textarea"
+                style={{ resize: 'vertical' }}
+              />
+            </div>
+          </div>
+
+          <div style={{
+            border: '2px solid #3B82F6',
+            padding: '10px 14px',
+            marginTop: '1rem',
+            fontSize: '0.7rem',
+            color: '#60A5FA',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.02em',
+          }}>
+            ℹ️ TO UPDATE YOUR PROFILE DETAILS ANYTIME, VISIT <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate('/profile')}>MY PROFILE</span> SECTION.
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
