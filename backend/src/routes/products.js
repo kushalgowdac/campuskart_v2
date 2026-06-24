@@ -12,14 +12,16 @@ import { verifyToken } from '../middleware/auth.js';
 
 const router = Router();
 
-// ── Public routes ──
-router.get('/',    listProducts);    // GET /api/products
+// ── Public route ──
+router.get('/',   listProducts);    // GET /api/products
+// ── Protected route ──
+// IMPORTANT: /mine must come BEFORE /:id
+// Otherwise Express matches 'mine' as the :id parameter
+router.get('/mine',verifyToken, getMyProducts);   // GET /api/products/mine
+// ── Public route ──
 router.get('/:id', getProductById); // GET /api/products/:id
 
 // ── Protected routes ──
-// IMPORTANT: /mine must come BEFORE /:id
-// Otherwise Express matches 'mine' as the :id parameter
-router.get('/mine',          verifyToken, getMyProducts);   // GET /api/products/mine
 router.post('/',             verifyToken, createProduct);   // POST /api/products
 router.put('/:id',           verifyToken, updateProduct);   // PUT /api/products/:id
 router.patch('/:id/status',  verifyToken, updateStatus);    // PATCH /api/products/:id/status
