@@ -71,6 +71,7 @@ const Navbar = () => {
           <>
             <Link to="/sell" style={linkStyle}>+ Sell</Link>
             <Link to="/dashboard" style={linkStyle}>My Listings</Link>
+            <Link to="/profile" style={linkStyle}>Profile</Link>
             {isAdmin && (
               <Link to="/admin" style={{ ...linkStyle, color: '#dc2626' }}>
                 Admin

@@ -40,6 +40,7 @@ const ContactSeller = () => {
     { label: '📸 Instagram', value: seller.instagram, url: `https://instagram.com/${seller.instagram}` },
     { label: '✈️ Telegram', value: seller.telegram, url: `https://t.me/${seller.telegram}` },
     { label: '🤖 Reddit', value: seller.reddit, url: `https://reddit.com/u/${seller.reddit}` },
+    { label: '💼 LinkedIn', value: seller.linkedin, url: `https://linkedin.com/in/${seller.linkedin}` },
   ].filter(c => c.value);
 
   return (

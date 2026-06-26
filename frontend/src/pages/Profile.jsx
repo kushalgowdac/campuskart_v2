@@ -9,6 +9,7 @@ const Profile = () => {
     instagram: user?.instagram || '',
     telegram: user?.telegram || '',
     reddit: user?.reddit || '',
+    linkedin: user?.linkedin || '',
   });
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
@@ -31,7 +32,10 @@ const Profile = () => {
     <div style={{ maxWidth: '480px', margin: '2rem auto', padding: '1.5rem' }}>
       <h1 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '4px' }}>My Profile</h1>
       <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '1.5rem' }}>
-        Contact info is shown to buyers when they click "I'm Interested" on your listings.
+        Buyers who click <strong>"I'm Interested"</strong> on your listings can see the
+        contact methods you choose to share. Instagram, Telegram, Reddit, and LinkedIn
+        are optional—add only the accounts you're comfortable sharing. CampusKart does
+        not verify or moderate conversations that happen outside the platform.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -63,6 +67,13 @@ const Profile = () => {
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: '14px' }}>u/</span>
             <input name="reddit" value={form.reddit} onChange={handleChange} placeholder="username" style={{ ...inputStyle, paddingLeft: '28px' }} />
+          </div>
+        </div>
+          <div>
+          <label style={labelStyle}>LinkedIn username (optional)</label>
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: '14px' }}>in/</span>
+            <input name="linkedin" value={form.linkedin} onChange={handleChange} placeholder="username" style={{ ...inputStyle, paddingLeft: '28px' }} />
           </div>
         </div>
 
