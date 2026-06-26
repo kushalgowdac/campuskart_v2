@@ -17,6 +17,7 @@
 // NO JWT_SECRET needed. No bcrypt. No password column.
 // ============================================================
 
+// import { link } from 'fs';
 import { supabase } from '../db/supabase.js';
 
 // ── syncUser ──────────────────────────────────────────────────
@@ -55,15 +56,23 @@ export const syncUser = async (req, res) => {
       });
     }
 
+    //to be removed later 
+    // console.log("[SYNC] Email:", email);
+
     // ── Find or create user in our application users table ──
     let { data: existingUser } = await supabase
       .from('users')
-      .select('id, name, email, role, instagram, telegram, reddit, created_at')
+      .select('id, name, email, role, instagram, telegram, reddit, linkedin, is_profile_complete, created_at')
       .eq('email', email)
       .single();
 
+    //to be removed later 
+    // console.log("[SYNC] Existing user:", existingUser);
+
     if (existingUser) {
       // User already exists — just return their profile
+    //to be removed later 
+      // console.log("[SYNC] Returning existing user");
       return res.json({ user: existingUser, isNew: false });
     }
 
@@ -84,14 +93,15 @@ export const syncUser = async (req, res) => {
         // password: 'GOOGLE_OAUTH_NO_PASSWORD',
         role:  'user',
       })
-      .select('id, name, email, role, instagram, telegram, reddit, created_at')
+      .select('id, name, email, role, instagram, telegram, reddit, linkedin, is_profile_complete, created_at')
       .single();
 
     if (insertError) {
       console.error('[syncUser] insert error:', insertError.message);
       return res.status(500).json({ error: 'Failed to create user profile.' });
     }
-
+    //to be removed later 
+    // console.log("[SYNC] Returning NEW user");
     return res.status(201).json({ user: newUser, isNew: true });
 
   } catch (err) {
@@ -107,7 +117,7 @@ export const getMe = async (req, res) => {
   try {
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, name, email, role, instagram, telegram, reddit, created_at')
+      .select('id, name, email, role, instagram, telegram, reddit, linkedin, is_profile_complete, created_at')
       .eq('id', req.user.id)
       .single();
 
@@ -127,7 +137,7 @@ export const getMe = async (req, res) => {
 // Seller updates their contact info (instagram, telegram, reddit)
 export const updateProfile = async (req, res) => {
   try {
-    const { name, instagram, telegram, reddit } = req.body;
+  const { name, instagram, telegram, reddit, linkedin, is_profile_complete } = req.body;
 
     const { data: updated, error } = await supabase
       .from('users')
@@ -136,9 +146,11 @@ export const updateProfile = async (req, res) => {
         ...(instagram !== undefined && { instagram: instagram || null }),
         ...(telegram  !== undefined && { telegram:  telegram  || null }),
         ...(reddit    !== undefined && { reddit:    reddit    || null }),
+        ...(linkedin    !== undefined && { linkedin:    linkedin    || null }),
+        ...(is_profile_complete !== undefined && { is_profile_complete }),
       })
       .eq('id', req.user.id)
-      .select('id, name, email, role, instagram, telegram, reddit')
+      .select('id, name, email, role, instagram, telegram, reddit, linkedin, is_profile_complete')
       .single();
 
     if (error) {

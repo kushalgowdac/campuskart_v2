@@ -20,7 +20,7 @@ export const showInterest = async (req, res) => {
 
     const { data: product, error: productError } = await supabase
       .from('products')
-      .select(`id, title, price, status, seller_id, seller:seller_id(id, name, email, instagram, telegram, reddit)`)
+      .select(`id, title, price, status, seller_id, seller:seller_id(id, name, email, instagram, telegram, reddit,linkedin)`)
       .eq('id', productId)
       .single();
 
@@ -41,12 +41,26 @@ export const showInterest = async (req, res) => {
     const isFirstTime = existingCount === 0;
 
     // Now insert — upsert silently ignores if row already exists
-    await supabase
-      .from('contact_requests')
-      .upsert(
-        { product_id: productId, buyer_id: buyerId, seller_id: product.seller_id },
-        { onConflict: 'product_id,buyer_id', ignoreDuplicates: true }
-      );
+  const { error: contactError } = await supabase
+    .from("contact_requests")
+    .upsert(
+      {
+        product_id: productId,
+        buyer_id: buyerId,
+        seller_id: product.seller_id,
+      },
+      {
+        onConflict: "product_id,buyer_id",
+        ignoreDuplicates: true,
+      }
+    );
+
+  if (contactError) {
+    console.error(contactError);
+    return res.status(500).json({
+      error: "Failed to record interest."
+    });
+  }
 
     // Only send notification on the buyer's first "I'm Interested" click
     if (isFirstTime) {
@@ -75,6 +89,7 @@ export const showInterest = async (req, res) => {
         instagram: product.seller.instagram,
         telegram:  product.seller.telegram,
         reddit:    product.seller.reddit,
+        linkedin:  product.seller.linkedin,
       },
       copy_message:   copyMessage,
       total_interest: totalInterest || 1,
