@@ -11,19 +11,20 @@
 // both harder to read and test.
 // ============================================================
 
+// routes/auth.js
 import { Router } from 'express';
-import { register, login, getMe, updateProfile } from '../controllers/authController.js';
+import { syncUser, getMe, updateProfile } from '../controllers/authController.js';
 import { verifyToken } from '../middleware/auth.js';
 
 const router = Router();
 
-// Public routes — no auth needed
-router.post('/register', register);
-router.post('/login',    login);
+// sync-user is NOT protected by verifyToken — it's called right after
+// Google login before we've verified the user has an app profile yet.
+// It does its own token verification internally.
+router.post('/sync-user', syncUser);
 
-// Protected routes — verifyToken middleware runs first
-// If token is invalid, verifyToken sends 401 and controller never runs
-router.get('/me',          verifyToken, getMe);
-router.put('/profile',     verifyToken, updateProfile);
+// Protected routes — verifyToken runs first
+router.get('/me',      verifyToken, getMe);
+router.put('/profile', verifyToken, updateProfile);
 
 export default router;
