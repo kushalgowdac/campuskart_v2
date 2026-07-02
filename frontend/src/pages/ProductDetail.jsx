@@ -1,209 +1,207 @@
-// ============================================================
-// pages/ProductDetail.jsx — Single product view
-// ============================================================
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
+import Button from '../components/Button';
 
 const ProductDetail = () => {
-  const { id } = useParams(); // gets :id from URL /product/:id
+  const { id } = useParams();
   const { isLoggedIn, user } = useAuth();
   const navigate = useNavigate();
 
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [product, setProduct]     = useState(null);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState('');
   const [activeImage, setActiveImage] = useState(0);
+  const [interested, setInterested]   = useState(false);
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const load = async () => {
       try {
         const res = await api.get(`/api/products/${id}`);
         setProduct(res.data);
       } catch {
-        setError('Product not found.');
+        setError('Product not found or no longer available.');
       } finally {
         setLoading(false);
       }
     };
-    fetchProduct();
+    load();
   }, [id]);
 
-  const formatPrice = (price) => new Intl.NumberFormat('en-IN', {
-    style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-  }).format(price);
+  const formatPrice = (price) =>
+    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(price);
 
   const handleInterest = () => {
-    if (!isLoggedIn) {
-      navigate('/login');
-      return;
-    }
+    if (!isLoggedIn) { navigate('/login'); return; }
+    setInterested(true);
     navigate(`/contact/${id}`);
   };
 
   if (loading) return (
-    <div style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>
-      Loading...
+    <div className="page" style={{ maxWidth: '900px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+        <div className="skeleton" style={{ aspectRatio: '4/3', borderRadius: 'var(--radius-lg)' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingTop: '8px' }}>
+          <div className="skeleton" style={{ height: '12px', width: '60px', borderRadius: '4px' }} />
+          <div className="skeleton" style={{ height: '24px', width: '80%', borderRadius: '4px' }} />
+          <div className="skeleton" style={{ height: '28px', width: '40%', borderRadius: '4px' }} />
+          <div className="skeleton" style={{ height: '80px', width: '100%', borderRadius: '4px', marginTop: '8px' }} />
+        </div>
+      </div>
     </div>
   );
 
   if (error || !product) return (
-    <div style={{ textAlign: 'center', padding: '4rem', color: '#dc2626' }}>
-      {error || 'Product not found'}
+    <div className="page" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
+      <p style={{ color: 'var(--color-text-secondary)', marginBottom: '16px' }}>{error || 'Product not found'}</p>
+      <Button variant="secondary" onClick={() => navigate(-1)}>Go back</Button>
     </div>
   );
 
-  const isOwnProduct = user?.id === product.seller?.id;
-  const images = product.image_urls || [];
+  const isOwn   = user?.id === product.seller?.id;
+  const images  = product.image_urls || [];
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '1.5rem' }}>
+    <>
+      <style>{`
+        .thumb {
+          width: 56px; height: 56px; object-fit: cover;
+          border-radius: var(--radius-sm); cursor: pointer;
+          border: 2px solid transparent; transition: border-color 0.15s;
+          flex-shrink: 0;
+        }
+        .thumb.active { border-color: var(--color-text-primary); }
+        .thumb:hover  { border-color: var(--color-border-strong); }
+        .main-img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.2s; }
+        @media (max-width: 640px) {
+          .product-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
 
-      {/* Back button */}
-      <button
-        onClick={() => navigate(-1)}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', marginBottom: '1rem', fontSize: '14px' }}
-      >
-        ← Back
-      </button>
+      <div className="page" style={{ maxWidth: '900px' }}>
+        {/* Back */}
+        <button
+          onClick={() => navigate(-1)}
+          className="btn-ghost"
+          style={{ marginBottom: '20px', display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 8px' }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', alignItems: 'start' }}>
 
-        {/* Left: images */}
-        <div>
-          <div style={{
-            borderRadius: '12px',
-            overflow: 'hidden',
-            background: '#f3f4f6',
-            height: '300px',
-            marginBottom: '8px',
-          }}>
-            {images.length > 0 ? (
-              <img
-                src={images[activeImage]}
-                alt={product.title}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : (
-              <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem' }}>
-                📦
+          {/* ── Left: image gallery ── */}
+          <div>
+            {/* Main image */}
+            <div style={{ aspectRatio: '4/3', background: 'var(--color-bg-subtle)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: '10px' }}>
+              {images.length > 0 ? (
+                <img
+                  src={images[activeImage]}
+                  alt={product.title}
+                  className="main-img"
+                  loading="eager" // hero image — load immediately
+                />
+              ) : (
+                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnail strip — only shown when multiple images */}
+            {images.length > 1 && (
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {images.map((url, i) => (
+                  <img
+                    key={i}
+                    src={url}
+                    alt={`Photo ${i + 1}`}
+                    className={`thumb${i === activeImage ? ' active' : ''}`}
+                    loading="lazy"
+                    onClick={() => setActiveImage(i)}
+                  />
+                ))}
               </div>
             )}
           </div>
-          {/* Thumbnail strip */}
-          {images.length > 1 && (
-            <div style={{ display: 'flex', gap: '6px' }}>
-              {images.map((url, i) => (
-                <img
-                  key={i}
-                  src={url}
-                  onClick={() => setActiveImage(i)}
-                  style={{
-                    width: '56px', height: '56px', objectFit: 'cover',
-                    borderRadius: '6px', cursor: 'pointer',
-                    border: i === activeImage ? '2px solid #1d4ed8' : '2px solid transparent',
-                  }}
-                />
-              ))}
+
+          {/* ── Right: details ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            {/* Category + title */}
+            <div>
+              <span className="badge badge-gray" style={{ marginBottom: '8px' }}>{product.category}</span>
+              <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.25, margin: '8px 0 0', color: 'var(--color-text-primary)' }}>
+                {product.title}
+              </h1>
             </div>
-          )}
-        </div>
 
-        {/* Right: details */}
-        <div>
-          <span style={{
-            fontSize: '12px', background: '#eff6ff', color: '#1d4ed8',
-            padding: '3px 10px', borderRadius: '20px', fontWeight: 500,
-          }}>
-            {product.category}
-          </span>
-
-          <h1 style={{ margin: '10px 0 6px', fontSize: '1.4rem', fontWeight: 700, color: '#111827' }}>
-            {product.title}
-          </h1>
-
-          <p style={{ fontSize: '1.6rem', fontWeight: 700, color: '#059669', margin: '0 0 12px' }}>
-            {formatPrice(product.price)}
-          </p>
-
-          {product.description && (
-            <p style={{ color: '#4b5563', fontSize: '14px', lineHeight: 1.6, marginBottom: '16px' }}>
-              {product.description}
+            {/* Price */}
+            <p className="text-price" style={{ fontSize: '26px', margin: 0 }}>
+              {formatPrice(product.price)}
             </p>
-          )}
 
-          {/* Seller info */}
-          <div style={{
-            background: '#f9fafb',
-            border: '1px solid #e5e7eb',
-            borderRadius: '10px',
-            padding: '12px',
-            marginBottom: '16px',
-          }}>
-            <p style={{ margin: '0 0 4px', fontSize: '13px', color: '#6b7280' }}>Seller</p>
-            <p style={{ margin: 0, fontWeight: 600, color: '#111827', fontSize: '15px' }}>
-              👤 {product.seller?.name}
-            </p>
-          </div>
+            {/* Description */}
+            {product.description && (
+              <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', lineHeight: 1.7, margin: 0 }}>
+                {product.description}
+              </p>
+            )}
 
-          {/* Interest count */}
-          {product.interest_count > 0 && (
-            <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '12px' }}>
-              🔥 {product.interest_count} {product.interest_count === 1 ? 'person' : 'people'} interested
-            </p>
-          )}
+            <hr className="divider" style={{ margin: '0' }} />
 
-          {/* Responsibility warning */}
-          <div style={{
-            background: '#fffbeb',
-            border: '1px solid #fcd34d',
-            borderRadius: '8px',
-            padding: '10px 12px',
-            marginBottom: '16px',
-            fontSize: '12px',
-            color: '#92400e',
-          }}>
-            ⚠️ Always meet in a safe, public place on campus. Verify the item before paying.
-          </div>
-
-          {/* CTA button */}
-          {!isOwnProduct && product.status === 'live' && (
-            <button
-              onClick={handleInterest}
-              style={{
-                width: '100%',
-                padding: '14px',
-                background: '#1d4ed8',
-                color: 'white',
-                border: 'none',
-                borderRadius: '10px',
-                fontSize: '15px',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              I'm Interested — Contact Seller
-            </button>
-          )}
-
-          {isOwnProduct && (
-            <div style={{
-              padding: '12px',
-              background: '#f0fdf4',
-              border: '1px solid #86efac',
-              borderRadius: '8px',
-              fontSize: '14px',
-              color: '#166534',
-              textAlign: 'center',
-            }}>
-              This is your listing. Manage it in <a href="/dashboard" style={{ color: '#166534' }}>My Listings</a>.
+            {/* Seller card */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* Avatar — initials from seller name */}
+              <div style={{
+                width: '40px', height: '40px', borderRadius: '50%',
+                background: 'var(--color-bg-hover)', border: '1px solid var(--color-border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '15px', fontWeight: 600, color: 'var(--color-text-secondary)', flexShrink: 0,
+              }}>
+                {product.seller?.name?.[0]?.toUpperCase() || '?'}
+              </div>
+              <div>
+                <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: '0 0 1px' }}>Listed by</p>
+                <p style={{ fontSize: '14px', fontWeight: 600, margin: 0, color: 'var(--color-text-primary)' }}>
+                  {product.seller?.name || 'Unknown'}
+                </p>
+              </div>
             </div>
-          )}
+
+            {/* Interest count */}
+            {product.interest_count > 0 && (
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: 0 }}>
+                {product.interest_count} {product.interest_count === 1 ? 'person' : 'people'} interested
+              </p>
+            )}
+
+            {/* Safety notice */}
+            <div style={{ padding: '12px 14px', background: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+              Always meet in a safe, public place on campus. Verify the item before paying.
+            </div>
+
+            {/* CTA */}
+            {!isOwn && product.status === 'live' && (
+              <Button fullWidth onClick={handleInterest} loading={interested}>
+                I'm Interested — Contact Seller
+              </Button>
+            )}
+
+            {isOwn && (
+              <div style={{ padding: '12px 14px', background: 'var(--color-accent-subtle)', border: '1px solid #6ee7b7', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: '#065f46', textAlign: 'center' }}>
+                This is your listing.{' '}
+                <a href="/dashboard" style={{ color: '#065f46', fontWeight: 600 }}>Manage it in My Listings →</a>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

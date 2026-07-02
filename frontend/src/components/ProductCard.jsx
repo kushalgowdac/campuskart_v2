@@ -1,131 +1,163 @@
-// ============================================================
-// components/ProductCard.jsx — Reusable product card
-// ============================================================
-// WHY a separate component?
-// The Browse page shows many products in a grid. Each card looks
-// the same — image, title, price, category, seller name.
-// Instead of repeating that HTML 50 times, we define it once here
-// and reuse it: products.map(p => <ProductCard product={p} />)
-//
-// This is the React component model — build small reusable pieces,
-// compose them into pages. Same as functions in regular programming.
-// ============================================================
-
+import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const ProductCard = ({ product }) => {
+// ── React.memo ────────────────────────────────────────────────
+// memo() wraps the component and tells React: "only re-render this
+// component if its props actually changed."
+// Without memo, every time Browse re-renders (e.g. setLoading(true)),
+// ALL ProductCards re-render even though their product data didn't change.
+// With memo, React compares the previous and new `product` prop — if
+// identical (same object reference or shallow equal), it skips the re-render.
+// For a grid of 20 cards this saves 19 unnecessary re-renders per search.
+
+const ProductCard = memo(({ product }) => {
   const navigate = useNavigate();
 
-  // Format price in Indian Rupees
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-IN', {
+  const formatPrice = (price) =>
+    new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0,
     }).format(price);
-  };
 
-  // Calculate days ago for "posted X days ago"
-  const daysAgo = (dateStr) => {
+  const timeAgo = (dateStr) => {
     const diff = Date.now() - new Date(dateStr).getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const days = Math.floor(diff / 86400000);
     if (days === 0) return 'Today';
-    if (days === 1) return '1 day ago';
-    return `${days} days ago`;
+    if (days === 1) return '1d ago';
+    if (days < 7)  return `${days}d ago`;
+    if (days < 30) return `${Math.floor(days / 7)}w ago`;
+    return `${Math.floor(days / 30)}mo ago`;
   };
 
   return (
-    <div
-      onClick={() => navigate(`/product/${product.id}`)}
-      style={{
-        background: 'white',
-        border: '1px solid #e5e7eb',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        cursor: 'pointer',
-        transition: 'transform 0.15s, box-shadow 0.15s',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)';
-      }}
-    >
-      {/* Product image */}
-      <div style={{ height: '180px', background: '#f3f4f6', overflow: 'hidden' }}>
-        {product.image_urls?.[0] ? (
-          <img
-            src={product.image_urls[0]}
-            alt={product.title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        ) : (
-          <div style={{
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '2.5rem',
+    <>
+      {/* ── Scoped CSS via <style> tag ──────────────────────────
+          CSS hover states cannot be expressed in inline JS style objects —
+          you need real CSS selectors. This <style> block scopes the hover
+          rule to cards only. The card-hover class handles the lift effect
+          purely in CSS — no JS onMouseEnter/onMouseLeave needed.
+          This is more performant AND works on touch devices correctly. */}
+      <style>{`
+        .product-card {
+          background: white;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-lg);
+          overflow: hidden;
+          cursor: pointer;
+          transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+          box-shadow: var(--shadow-sm);
+          display: flex;
+          flex-direction: column;
+        }
+        .product-card:hover {
+          transform: translateY(-3px);
+          box-shadow: var(--shadow-md);
+          border-color: var(--color-border-strong);
+        }
+        .product-card:active {
+          transform: translateY(-1px);
+        }
+        .product-card-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          /* loading="lazy" handled as HTML attribute below */
+          transition: transform 0.3s ease;
+        }
+        .product-card:hover .product-card-img {
+          transform: scale(1.03);
+        }
+      `}</style>
+
+      <div
+        className="product-card"
+        onClick={() => navigate(`/product/${product.id}`)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => e.key === 'Enter' && navigate(`/product/${product.id}`)}
+        aria-label={`View ${product.title}, priced at ${formatPrice(product.price)}`}
+      >
+        {/* Image container — fixed aspect ratio via padding trick */}
+        <div style={{ aspectRatio: '4/3', background: 'var(--color-bg-subtle)', overflow: 'hidden', position: 'relative' }}>
+          {product.image_urls?.[0] ? (
+            <img
+              src={product.image_urls[0]}
+              alt={product.title}
+              className="product-card-img"
+              loading="lazy"
+              // loading="lazy": browser-native lazy loading.
+              // Images outside the viewport are NOT downloaded until the user
+              // scrolls near them. Zero JavaScript required. Cuts initial page
+              // load time significantly when the grid has many products.
+            />
+          ) : (
+            <div style={{
+              height: '100%', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', color: 'var(--color-text-muted)',
+            }}>
+              <NoImageIcon />
+            </div>
+          )}
+
+          {/* Category badge — overlaid on image */}
+          <span style={{
+            position: 'absolute', top: '10px', left: '10px',
+            background: 'rgba(255,255,255,0.92)',
+            backdropFilter: 'blur(8px)',
+            color: 'var(--color-text-secondary)',
+            fontSize: '11px', fontWeight: 500,
+            padding: '3px 9px', borderRadius: '999px',
+            border: '1px solid rgba(255,255,255,0.6)',
           }}>
-            📦
+            {product.category}
+          </span>
+        </div>
+
+        {/* Card body */}
+        <div style={{ padding: '14px 16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {/* Title */}
+          <h3 style={{
+            fontSize: '14px', fontWeight: 600,
+            color: 'var(--color-text-primary)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            lineHeight: 1.3,
+          }}>
+            {product.title}
+          </h3>
+
+          {/* Price */}
+          <p className="text-price" style={{ fontSize: '16px', fontWeight: 700 }}>
+            {formatPrice(product.price)}
+          </p>
+
+          {/* Seller + time — pushed to bottom */}
+          <div style={{
+            display: 'flex', justifyContent: 'space-between',
+            alignItems: 'center', marginTop: 'auto', paddingTop: '8px',
+            borderTop: '1px solid var(--color-border)',
+          }}>
+            <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+              {product.seller?.name || 'Unknown'}
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+              {timeAgo(product.created_at)}
+            </span>
           </div>
-        )}
-      </div>
-
-      {/* Card content */}
-      <div style={{ padding: '12px' }}>
-        {/* Category badge */}
-        <span style={{
-          fontSize: '11px',
-          background: '#eff6ff',
-          color: '#1d4ed8',
-          padding: '2px 8px',
-          borderRadius: '20px',
-          fontWeight: 500,
-        }}>
-          {product.category}
-        </span>
-
-        {/* Title */}
-        <h3 style={{
-          margin: '8px 0 4px',
-          fontSize: '14px',
-          fontWeight: 600,
-          color: '#111827',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}>
-          {product.title}
-        </h3>
-
-        {/* Price */}
-        <p style={{
-          fontSize: '16px',
-          fontWeight: 700,
-          color: '#059669',
-          margin: '0 0 8px',
-        }}>
-          {formatPrice(product.price)}
-        </p>
-
-        {/* Seller + time */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          fontSize: '12px',
-          color: '#6b7280',
-        }}>
-          <span>👤 {product.seller?.name || 'Unknown'}</span>
-          <span>{daysAgo(product.created_at)}</span>
         </div>
       </div>
-    </div>
+    </>
   );
-};
+});
+
+ProductCard.displayName = 'ProductCard';
+
+const NoImageIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+    <circle cx="8.5" cy="8.5" r="1.5"/>
+    <polyline points="21 15 16 10 5 21"/>
+  </svg>
+);
 
 export default ProductCard;

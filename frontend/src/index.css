@@ -1,5 +1,300 @@
-*, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9fafb; color: #111827; }
-a { color: inherit; }
-button { font-family: inherit; }
-input, textarea, select { font-family: inherit; }
+/* ── Imports MUST come first in a CSS file ───────────────────
+   CSS spec requires every @import to appear before any other
+   rule (besides @charset). Tailwind's @import and the Google
+   Fonts @import both need to be at the very top, in this order. */
+@import "tailwindcss";
+
+/* ── Global reset ────────────────────────────────────────────
+   box-sizing: border-box means padding is included in width.
+   Without this, padding: 12px on a 100px wide div makes it 124px.
+   Every professional CSS reset sets this. */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Design tokens ───────────────────────────────────────────
+   CSS custom properties (variables) are the single source of truth
+   for every color, font, and spacing value in the app.
+   Change --color-primary here and every button, link, and accent
+   updates automatically. This is what a "design system" means in code.
+
+   Our palette is deliberately monochromatic:
+   - Near-black for text and primary actions (not pure black — too harsh)
+   - White for surfaces
+   - One accent color (emerald) for prices only
+   - No blue anywhere (except the Google button which must stay Google blue) */
+:root {
+  /* Color */
+  --color-text-primary:   #0a0a0a;   /* near-black — headings, body text, buttons */
+  --color-text-secondary: #525252;   /* mid-gray — subtitles, metadata */
+  --color-text-muted:     #a3a3a3;   /* light gray — placeholders, timestamps */
+
+  --color-bg-primary:     #ffffff;   /* white — page background */
+  --color-bg-subtle:      #fafafa;   /* near-white — card backgrounds */
+  --color-bg-hover:       #f5f5f5;   /* hover state for interactive elements */
+
+  --color-border:         #e5e5e5;   /* standard border */
+  --color-border-strong:  #d4d4d4;   /* focused input border */
+
+  --color-accent:         #10b981;   /* emerald — prices only. Single pop of color. */
+  --color-accent-subtle:  #ecfdf5;   /* emerald-50 — accent backgrounds */
+
+  --color-danger:         #ef4444;   /* red — errors, delete actions */
+  --color-danger-subtle:  #fef2f2;   /* red-50 — error backgrounds */
+
+  --color-warning:        #f59e0b;   /* amber — warnings */
+  --color-warning-subtle: #fffbeb;   /* amber-50 — warning backgrounds */
+
+  --color-success:        #10b981;   /* same as accent */
+  --color-success-subtle: #ecfdf5;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Spacing scale — 4px base unit (same as Tailwind) */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Border radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Shadows — very subtle, not the heavy blue-tinted shadows from before */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
+}
+
+/* ── Base styles ─────────────────────────────────────────────*/
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;   /* Makes text crisper on macOS/iOS */
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Shared component classes ────────────────────────────────
+   These replace the inline style objects repeated in every file.
+   A component class is written once here, used everywhere. */
+
+/* Button — primary (black, filled) */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 10px 18px;
+  background: var(--color-text-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-primary:hover {
+  background: #171717;
+  transform: translateY(-1px);
+}
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled {
+  background: var(--color-text-muted);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Button — secondary (outlined) */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 9px 17px;
+  background: white;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-secondary:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border-strong);
+}
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Button — ghost (no border) */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+}
+.btn-ghost:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+/* Button — danger */
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 14px;
+  background: var(--color-danger-subtle);
+  color: var(--color-danger);
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-danger:hover { background: #fee2e2; }
+
+/* Form input */
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+.input:focus {
+  border-color: var(--color-text-primary);
+  box-shadow: 0 0 0 3px rgba(10,10,10,0.06);
+}
+.input::placeholder { color: var(--color-text-muted); }
+.input:disabled {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* Card */
+.card {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Label */
+.label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: 5px;
+  letter-spacing: 0.01em;
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.badge-gray     { background: var(--color-bg-hover); color: var(--color-text-secondary); }
+.badge-black    { background: var(--color-text-primary); color: white; }
+.badge-green    { background: var(--color-accent-subtle); color: #059669; }
+.badge-amber    { background: var(--color-warning-subtle); color: #b45309; }
+.badge-red      { background: var(--color-danger-subtle); color: #b91c1c; }
+.badge-blue     { background: #eff6ff; color: #1d4ed8; }  /* kept for category chips only */
+
+/* Page container — max width + centering */
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+}
+.page-narrow {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+}
+
+/* Divider */
+.divider {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--space-6) 0;
+}
+
+/* Text utilities */
+.text-muted { color: var(--color-text-muted); font-size: 13px; }
+.text-secondary { color: var(--color-text-secondary); }
+.text-price {
+  color: var(--color-accent);
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums; /* prevents price width jumping */
+}
+
+/* Loading skeleton animation
+   Skeleton loaders show the shape of content while it loads.
+   This is better than "Loading..." text because users understand
+   the page structure before content arrives — reduces perceived wait time. */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.skeleton {
+  background: var(--color-bg-hover);
+  border-radius: var(--radius-sm);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* Smooth page transitions */
+.page, .page-narrow { animation: fadeIn 0.2s ease; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

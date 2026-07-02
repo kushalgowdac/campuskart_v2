@@ -1,103 +1,147 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+import Button from '../components/Button';
 
-const STATUS_COLORS = {
-  pending:  { bg: '#fffbeb', color: '#92400e', label: 'Pending Review' },
-  live:     { bg: '#f0fdf4', color: '#166534', label: 'Live' },
-  hidden:   { bg: '#f3f4f6', color: '#374151', label: 'Hidden' },
-  sold:     { bg: '#eff6ff', color: '#1e40af', label: 'Sold' },
-  rejected: { bg: '#fef2f2', color: '#991b1b', label: 'Rejected' },
-  expired:  { bg: '#f3f4f6', color: '#6b7280', label: 'Expired' },
+const STATUS_STYLES = {
+  pending:  { className: 'badge-amber', label: 'Pending Review' },
+  live:     { className: 'badge-green', label: 'Live' },
+  hidden:   { className: 'badge-gray',  label: 'Hidden' },
+  sold:     { className: 'badge-blue',  label: 'Sold' },
+  rejected: { className: 'badge-red',   label: 'Rejected' },
+  expired:  { className: 'badge-gray',  label: 'Expired' },
 };
 
 const Dashboard = () => {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]   = useState(true);
+  // actionError replaces window.alert() — shown inline, dismissible,
+  // doesn't block the UI thread the way a native alert() does.
+  const [actionError, setActionError] = useState('');
+  const [busyId, setBusyId] = useState(null); // tracks which card's button is mid-request
   const navigate = useNavigate();
 
   useEffect(() => {
     api.get('/api/products/mine')
       .then(res => setProducts(res.data))
-      .catch(() => {})
+      .catch(() => setActionError('Failed to load your listings.'))
       .finally(() => setLoading(false));
   }, []);
 
   const updateStatus = async (id, status) => {
+    setBusyId(id);
+    setActionError('');
     try {
       await api.patch(`/api/products/${id}/status`, { status });
       setProducts(prev => prev.map(p => p.id === id ? { ...p, status } : p));
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to update.');
+      setActionError(err.response?.data?.error || 'Failed to update listing.');
+    } finally {
+      setBusyId(null);
     }
   };
 
   const deleteProduct = async (id) => {
-    if (!confirm('Delete this listing permanently?')) return;
+    if (!confirm('Delete this listing permanently? This cannot be undone.')) return;
+    setBusyId(id);
+    setActionError('');
     try {
       await api.delete(`/api/products/${id}`);
       setProducts(prev => prev.filter(p => p.id !== id));
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to delete.');
+      setActionError(err.response?.data?.error || 'Failed to delete listing.');
+    } finally {
+      setBusyId(null);
     }
   };
 
-  if (loading) return <div style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>Loading...</div>;
+  const formatPrice = (price) =>
+    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(price);
+
+  if (loading) return (
+    <div className="page">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="card" style={{ padding: '16px', display: 'flex', gap: '14px' }}>
+            <div className="skeleton" style={{ width: '72px', height: '72px', borderRadius: '8px', flexShrink: 0 }} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
+              <div className="skeleton" style={{ height: '14px', width: '40%', borderRadius: '4px' }} />
+              <div className="skeleton" style={{ height: '18px', width: '20%', borderRadius: '4px' }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
-    <div style={{ maxWidth: '800px', margin: '2rem auto', padding: '1.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700 }}>My Listings</h1>
-        <button onClick={() => navigate('/sell')} style={{ padding: '8px 16px', background: '#1d4ed8', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}>
-          + New Listing
-        </button>
+    <div className="page">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+        <h1 style={{ fontSize: '20px', fontWeight: 700 }}>My Listings</h1>
+        <Button onClick={() => navigate('/sell')}>+ New Listing</Button>
       </div>
 
+      {/* Inline error banner — replaces alert(). Dismissible, non-blocking. */}
+      {actionError && (
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '12px 16px', background: 'var(--color-danger-subtle)', border: '1px solid #fecaca',
+          borderRadius: 'var(--radius-md)', color: 'var(--color-danger)', fontSize: '13px', marginBottom: '20px',
+        }}>
+          {actionError}
+          <button onClick={() => setActionError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', fontSize: '16px', lineHeight: 1, padding: '0 4px' }}>×</button>
+        </div>
+      )}
+
       {products.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📭</div>
-          <p>No listings yet. <a href="/sell" style={{ color: '#1d4ed8' }}>Create one!</a></p>
+        <div style={{ textAlign: 'center', padding: '4rem 1rem', color: 'var(--color-text-muted)' }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto 16px', display: 'block' }}>
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+          </svg>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+            No listings yet. <a href="/sell" style={{ color: 'var(--color-text-primary)', fontWeight: 500 }}>Create one</a>
+          </p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {products.map(p => {
-            const s = STATUS_COLORS[p.status] || STATUS_COLORS.pending;
+            const status = STATUS_STYLES[p.status] || STATUS_STYLES.pending;
+            const isBusy = busyId === p.id;
             return (
-              <div key={p.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '14px 16px', display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-                {/* Image */}
-                <div style={{ width: '72px', height: '72px', background: '#f3f4f6', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
+              <div key={p.id} className="card" style={{ padding: '16px', display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                <div style={{ width: '72px', height: '72px', background: 'var(--color-bg-subtle)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', flexShrink: 0 }}>
                   {p.image_urls?.[0]
-                    ? <img src={p.image_urls[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>📦</div>
+                    ? <img src={p.image_urls[0]} alt={p.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                      </div>
                   }
                 </div>
 
-                {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                    <h3 style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</h3>
-                    <span style={{ background: s.bg, color: s.color, fontSize: '11px', padding: '2px 8px', borderRadius: '20px', fontWeight: 500, flexShrink: 0 }}>{s.label}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</h3>
+                    <span className={`badge ${status.className}`} style={{ flexShrink: 0 }}>{status.label}</span>
                   </div>
-                  <p style={{ margin: '0 0 10px', fontSize: '15px', fontWeight: 700, color: '#059669' }}>₹{p.price}</p>
+                  <p className="text-price" style={{ fontSize: '15px', marginBottom: '10px' }}>{formatPrice(p.price)}</p>
 
-                  {/* Action buttons */}
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     {p.status === 'live' && (
-                      <button onClick={() => updateStatus(p.id, 'hidden')} style={btnStyle('#f3f4f6', '#374151')}>Hide</button>
+                      <Button variant="secondary" loading={isBusy} onClick={() => updateStatus(p.id, 'hidden')} style={{ padding: '5px 12px', fontSize: '12px' }}>Hide</Button>
                     )}
                     {p.status === 'hidden' && (
-                      <button onClick={() => updateStatus(p.id, 'live')} style={btnStyle('#f0fdf4', '#166534')}>Unhide</button>
+                      <Button variant="secondary" loading={isBusy} onClick={() => updateStatus(p.id, 'live')} style={{ padding: '5px 12px', fontSize: '12px' }}>Unhide</Button>
                     )}
                     {(p.status === 'live' || p.status === 'hidden') && (
-                      <button onClick={() => updateStatus(p.id, 'sold')} style={btnStyle('#eff6ff', '#1e40af')}>Mark Sold</button>
+                      <Button variant="secondary" loading={isBusy} onClick={() => updateStatus(p.id, 'sold')} style={{ padding: '5px 12px', fontSize: '12px' }}>Mark Sold</Button>
                     )}
                     {p.status !== 'sold' && (
-                      <button onClick={() => deleteProduct(p.id)} style={btnStyle('#fef2f2', '#991b1b')}>Delete</button>
+                      <Button variant="danger" loading={isBusy} onClick={() => deleteProduct(p.id)} style={{ padding: '5px 12px', fontSize: '12px' }}>Delete</Button>
                     )}
                   </div>
 
                   {p.status === 'rejected' && (
-                    <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#991b1b' }}>Rejected — edit and resubmit</p>
+                    <p style={{ marginTop: '8px', fontSize: '12px', color: 'var(--color-danger)' }}>Rejected — edit and resubmit from Sell page</p>
                   )}
                 </div>
               </div>
@@ -108,10 +152,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
-const btnStyle = (bg, color) => ({
-  padding: '5px 12px', background: bg, color, border: 'none',
-  borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 500,
-});
 
 export default Dashboard;
