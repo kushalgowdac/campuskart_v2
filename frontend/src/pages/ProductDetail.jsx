@@ -9,11 +9,11 @@ const ProductDetail = () => {
   const { isLoggedIn, user } = useAuth();
   const navigate = useNavigate();
 
-  const [product, setProduct]     = useState(null);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState('');
+  const [product, setProduct]       = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState('');
   const [activeImage, setActiveImage] = useState(0);
-  const [interested, setInterested]   = useState(false);
+  const [interested, setInterested] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -59,50 +59,45 @@ const ProductDetail = () => {
     </div>
   );
 
-  const isOwn   = user?.id === product.seller?.id;
-  const images  = product.image_urls || [];
+  const isOwn  = user?.id === product.seller?.id;
+  const images = product.image_urls || [];
 
   return (
     <>
       <style>{`
-        .thumb {
-          width: 56px; height: 56px; object-fit: cover;
-          border-radius: var(--radius-sm); cursor: pointer;
-          border: 2px solid transparent; transition: border-color 0.15s;
-          flex-shrink: 0;
-        }
+        .thumb { width: 56px; height: 56px; object-fit: cover; border-radius: var(--radius-sm); cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s; flex-shrink: 0; }
         .thumb.active { border-color: var(--color-text-primary); }
         .thumb:hover  { border-color: var(--color-border-strong); }
         .main-img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.2s; }
-        @media (max-width: 640px) {
-          .product-grid { grid-template-columns: 1fr !important; }
+        .main-img-wrap { cursor: zoom-in; }
+        .main-img-wrap:hover::after {
+          content: 'Click to view full size';
+          position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+          background: rgba(0,0,0,0.65); color: white; font-size: 12px;
+          padding: 4px 10px; border-radius: 20px; white-space: nowrap; pointer-events: none;
         }
+        @media (max-width: 640px) { .product-grid { grid-template-columns: 1fr !important; } }
       `}</style>
 
       <div className="page" style={{ maxWidth: '900px' }}>
-        {/* Back */}
-        <button
-          onClick={() => navigate(-1)}
-          className="btn-ghost"
-          style={{ marginBottom: '20px', display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 8px' }}
-        >
+        <button onClick={() => navigate(-1)} className="btn-ghost" style={{ marginBottom: '20px', display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 8px' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
           Back
         </button>
 
         <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', alignItems: 'start' }}>
 
-          {/* ── Left: image gallery ── */}
+          {/* Images */}
           <div>
-            {/* Main image */}
-            <div style={{ aspectRatio: '4/3', background: 'var(--color-bg-subtle)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: '10px' }}>
+            {/* Main image — click to open full size */}
+            <div
+              className="main-img-wrap"
+              style={{ aspectRatio: '4/3', background: 'var(--color-bg-subtle)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: '10px', position: 'relative' }}
+              onClick={() => images[activeImage] && window.open(images[activeImage], '_blank')}
+              title="Click to view full size"
+            >
               {images.length > 0 ? (
-                <img
-                  src={images[activeImage]}
-                  alt={product.title}
-                  className="main-img"
-                  loading="eager" // hero image — load immediately
-                />
+                <img src={images[activeImage]} alt={product.title} className="main-img" loading="eager" />
               ) : (
                 <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -112,80 +107,66 @@ const ProductDetail = () => {
               )}
             </div>
 
-            {/* Thumbnail strip — only shown when multiple images */}
+            {/* Thumbnail strip */}
             {images.length > 1 && (
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {images.map((url, i) => (
-                  <img
-                    key={i}
-                    src={url}
-                    alt={`Photo ${i + 1}`}
+                  <img key={i} src={url} alt={`Photo ${i + 1}`}
                     className={`thumb${i === activeImage ? ' active' : ''}`}
-                    loading="lazy"
-                    onClick={() => setActiveImage(i)}
-                  />
+                    loading="lazy" onClick={() => setActiveImage(i)} />
                 ))}
               </div>
             )}
+
+            {images.length > 0 && (
+              <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '6px' }}>
+                Click image to view full size
+              </p>
+            )}
           </div>
 
-          {/* ── Right: details ── */}
+          {/* Details */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-            {/* Category + title */}
             <div>
               <span className="badge badge-gray" style={{ marginBottom: '8px' }}>{product.category}</span>
-              <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.25, margin: '8px 0 0', color: 'var(--color-text-primary)' }}>
+              <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.25, margin: '8px 0 0' }}>
                 {product.title}
               </h1>
             </div>
 
-            {/* Price */}
             <p className="text-price" style={{ fontSize: '26px', margin: 0 }}>
               {formatPrice(product.price)}
             </p>
 
-            {/* Description */}
             {product.description && (
               <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)', lineHeight: 1.7, margin: 0 }}>
                 {product.description}
               </p>
             )}
 
-            <hr className="divider" style={{ margin: '0' }} />
+            <hr className="divider" style={{ margin: 0 }} />
 
-            {/* Seller card */}
+            {/* Seller */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              {/* Avatar — initials from seller name */}
-              <div style={{
-                width: '40px', height: '40px', borderRadius: '50%',
-                background: 'var(--color-bg-hover)', border: '1px solid var(--color-border)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '15px', fontWeight: 600, color: 'var(--color-text-secondary)', flexShrink: 0,
-              }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-bg-hover)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', fontWeight: 600, color: 'var(--color-text-secondary)', flexShrink: 0 }}>
                 {product.seller?.name?.[0]?.toUpperCase() || '?'}
               </div>
               <div>
                 <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: '0 0 1px' }}>Listed by</p>
-                <p style={{ fontSize: '14px', fontWeight: 600, margin: 0, color: 'var(--color-text-primary)' }}>
-                  {product.seller?.name || 'Unknown'}
-                </p>
+                <p style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>{product.seller?.name || 'Unknown'}</p>
               </div>
             </div>
 
-            {/* Interest count */}
             {product.interest_count > 0 && (
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: 0 }}>
                 {product.interest_count} {product.interest_count === 1 ? 'person' : 'people'} interested
               </p>
             )}
 
-            {/* Safety notice */}
             <div style={{ padding: '12px 14px', background: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
               Always meet in a safe, public place on campus. Verify the item before paying.
             </div>
 
-            {/* CTA */}
             {!isOwn && product.status === 'live' && (
               <Button fullWidth onClick={handleInterest} loading={interested}>
                 I'm Interested — Contact Seller
