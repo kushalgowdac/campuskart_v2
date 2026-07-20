@@ -13,6 +13,7 @@ import Profile from './pages/Profile';
 import Admin from './pages/Admin';
 import Notifications from './pages/Notifications';
 import Setup from './pages/Setup';
+import Contribute from './pages/Contribute';
 
 // ── Why ErrorBoundary wraps everything here ────────────────
 // Placing it ONCE at the top level (inside BrowserRouter, outside Routes)
@@ -39,6 +40,7 @@ function App() {
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/contribute" element={<ProtectedRoute><Contribute /></ProtectedRoute>} />
             <Route path="/setup" element={<ProtectedRoute><Setup /></ProtectedRoute>} />
 
             {/* Admin only */}

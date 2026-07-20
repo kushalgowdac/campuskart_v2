@@ -106,6 +106,7 @@ const Navbar = () => {
                 <Link to="/sell"      className={linkClass('/sell')}>Sell</Link>
                 <Link to="/dashboard" className={linkClass('/dashboard')}>My Listings</Link>
                 <Link to="/profile"   className={linkClass('/profile')}>Profile</Link>
+                <Link to="/contribute" className={linkClass('/contribute')}>Contribute</Link>
                 {isAdmin && (
                   <Link to="/admin" className="nav-link" style={{ color: '#ef4444' }}>Admin</Link>
                 )}
@@ -157,6 +158,7 @@ const Navbar = () => {
               <Link to="/dashboard"     style={mobileLinkClass('/dashboard')}>My Listings</Link>
               <Link to="/notifications" style={mobileLinkClass('/notifications')}>Notifications {unreadCount > 0 && `(${unreadCount})`}</Link>
               <Link to="/profile"       style={mobileLinkClass('/profile')}>Profile</Link>
+              <Link to="/contribute" style={mobileLinkClass('/contribute')}>Contribute</Link>
               {isAdmin && <Link to="/admin" style={{ ...mobileLinkClass('/admin'), color: '#ef4444' }}>Admin</Link>}
               <button onClick={handleLogout} style={{ ...styles.mobileLink, border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', width: '100%' }}>
                 Sign out

@@ -56,14 +56,24 @@ const Sell = () => {
 
   const removeImage = (i) => setImageItems(prev => prev.filter((_, idx) => idx !== i));
 
+  // const validate = () => {
+  //   const errs = {};
+  //   if (!form.title.trim()) errs.title = 'Title is required';
+  //   if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 0) errs.price = 'Enter a valid price';
+  //   setFieldErrors(errs);
+  //   return Object.keys(errs).length === 0;
+  // };
   const validate = () => {
     const errs = {};
     if (!form.title.trim()) errs.title = 'Title is required';
-    if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 0) errs.price = 'Enter a valid price';
+    if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 0)
+      errs.price = 'Enter a valid price';
+    if (imageItems.length === 0)
+      setError('Please add at least 1 photo so buyers can see the item.');
     setFieldErrors(errs);
-    return Object.keys(errs).length === 0;
+    return Object.keys(errs).length === 0 && imageItems.length > 0;
   };
-
+  
   const handleSubmit = async () => {
     if (!validate()) return;
     setLoading(true); setError('');
