@@ -121,7 +121,7 @@ export const approveProduct = async (req, res) => {
     await supabase.from('notifications').insert({
       user_id:    product.seller_id,
       type:       'approved',
-      title:      '🎉 Your listing is live!',
+      title:      'Your listing is live',
       message:    `"${product.title}" has been approved and is now visible to buyers.`,
       product_id: product.id,
     });
@@ -184,7 +184,7 @@ export const rejectProduct = async (req, res) => {
       user_id:    product.seller_id,
       type:       'rejected',
       title:      'Listing not approved',
-      message:    `"${product.title}" was not approved. Reason: ${reason.trim()}. You can edit and resubmit.`,
+      message:    `"${product.title}" was not approved. Reason: ${reason.trim()}.`,
       product_id: product.id,
     });
 

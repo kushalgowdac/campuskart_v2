@@ -127,10 +127,17 @@ const runCleanup = async () => {
 // 24 * 60 * 60 * 1000 = milliseconds in a day.
 export const startCleanupJob = () => {
   console.log('[Cleanup] Scheduling daily cleanup job...');
-
-  // Run once immediately on startup (catch anything missed)
   runCleanup();
-
-  // Then run every 24 hours
   setInterval(runCleanup, 24 * 60 * 60 * 1000);
+
+  // Keep Supabase active — ping every 4 days
+  // Free tier pauses after ~7 days of inactivity
+  setInterval(async () => {
+    try {
+      await supabase.from('users').select('id').limit(1);
+      console.log('[Keepalive] Supabase pinged successfully');
+    } catch (err) {
+      console.error('[Keepalive] Ping failed:', err.message);
+    }
+  }, 4 * 24 * 60 * 60 * 1000); // every 4 days
 };

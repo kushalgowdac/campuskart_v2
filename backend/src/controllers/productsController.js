@@ -32,7 +32,6 @@ import { uploadMultiple, deleteMultiple } from '../utils/cloudinary.js';
 export const listProducts = async (req, res) => {
   try {
     const { category, q, sort } = req.query;
-
     // Build query step by step — Supabase SDK is chainable like this.
     // Each .eq(), .ilike(), .order() adds to the query.
     // Nothing runs until we await the final result.
@@ -50,7 +49,10 @@ export const listProducts = async (req, res) => {
         )
       `)
       .eq('status', 'live')  // Only show approved products to public
-      .order('created_at', { ascending: false }); // Newest first
+      .order(
+        sort === 'price_asc' || sort === 'price_desc' ? 'price' : 'created_at',
+        { ascending: sort === 'price_asc' }
+      );
 
     // Apply category filter if provided
     // ?category=Books → AND category = 'Books'
