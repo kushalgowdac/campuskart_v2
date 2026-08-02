@@ -16,7 +16,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 // ── Replace these with your actual links ─────────────────────
-const WHATSAPP_CHANNEL = 'https://whatsapp.com/channel/YOUR_CHANNEL_LINK';
+const WHATSAPP_CHANNEL = 'https://chat.whatsapp.com/JbksPgC6VzBFr2nt7dxWhd';
 const FEEDBACK_EMAIL   = 'kushalgowdac.cs23@rvce.edu.in';
 // ─────────────────────────────────────────────────────────────
 
