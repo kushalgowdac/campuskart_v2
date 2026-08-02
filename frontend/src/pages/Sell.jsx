@@ -3,17 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import Button from '../components/Button';
 import Input from '../components/Input';
+import { compressMultiple } from '../utils/compressImage';
 
 const CATEGORIES = ['Books', 'Electronics', 'Clothing', 'Stationery', 'Sports', 'Other'];
-const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const MAX_IMAGES = 4;
+
+// No hard size limit per image anymore — compression handles it.
+// We still reject files over 20MB because they take too long to
+// even load into the browser for compression.
+const ABSOLUTE_MAX_BYTES = 20 * 1024 * 1024; // 20MB
 
 const Sell = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ title: '', description: '', price: '', category: 'Books' });
-  const [imageItems, setImageItems] = useState([]); // [{ base64, preview, name }]
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState('');
+  const [form, setForm]   = useState({ title: '', description: '', price: '', category: 'Books' });
+  const [imageItems, setImageItems] = useState([]); // [{ base64, preview, name, originalKB, compressedKB, savedPercent }]
+  const [compressing, setCompressing] = useState(false); // true while canvas is working
+  const [loading, setLoading]         = useState(false);
+  const [error, setError]             = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
 
   const handleChange = e => {
@@ -21,7 +27,6 @@ const Sell = () => {
     setFieldErrors(prev => ({ ...prev, [e.target.name]: '' }));
   };
 
-  // Accumulates new images onto existing selection instead of replacing
   const handleAddImages = async (e) => {
     const newFiles  = Array.from(e.target.files);
     const slotsLeft = MAX_IMAGES - imageItems.length;
@@ -33,57 +38,72 @@ const Sell = () => {
     }
 
     const filesToAdd = newFiles.slice(0, slotsLeft);
-    const oversized  = filesToAdd.filter(f => f.size > MAX_IMAGE_BYTES);
-    if (oversized.length > 0) {
-      setError(`Images exceed 3MB limit: ${oversized.map(f => f.name).join(', ')}`);
+
+    // Only reject truly enormous files (>20MB) — compression handles the rest
+    const tooBig = filesToAdd.filter(f => f.size > ABSOLUTE_MAX_BYTES);
+    if (tooBig.length > 0) {
+      setError(`Some files are too large to process (max 20MB): ${tooBig.map(f => f.name).join(', ')}`);
       e.target.value = '';
       return;
     }
 
     setError('');
+    setCompressing(true); // show "Compressing..." state
 
-    const newItems = await Promise.all(filesToAdd.map(file =>
-      new Promise(resolve => {
-        const reader = new FileReader();
-        reader.onload = () => resolve({ base64: reader.result, preview: reader.result, name: file.name });
-        reader.readAsDataURL(file);
-      })
-    ));
+    try {
+      // Compress all selected images using Canvas API
+      // This runs in the browser — no network request
+      const results = await compressMultiple(filesToAdd);
 
-    setImageItems(prev => [...prev, ...newItems]);
-    e.target.value = '';
+      const newItems = results.map((result, i) => ({
+        base64:       result.base64,
+        preview:      result.base64, // same data URL used for <img src>
+        name:         filesToAdd[i].name,
+        originalKB:   result.originalKB,
+        compressedKB: result.compressedKB,
+        savedPercent: result.savedPercent,
+      }));
+
+      setImageItems(prev => [...prev, ...newItems]);
+    } catch (err) {
+      setError(`Failed to process images: ${err.message}`);
+    } finally {
+      setCompressing(false);
+      e.target.value = '';
+    }
   };
 
   const removeImage = (i) => setImageItems(prev => prev.filter((_, idx) => idx !== i));
 
-  // const validate = () => {
-  //   const errs = {};
-  //   if (!form.title.trim()) errs.title = 'Title is required';
-  //   if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 0) errs.price = 'Enter a valid price';
-  //   setFieldErrors(errs);
-  //   return Object.keys(errs).length === 0;
-  // };
   const validate = () => {
     const errs = {};
     if (!form.title.trim()) errs.title = 'Title is required';
     if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 0)
       errs.price = 'Enter a valid price';
     if (imageItems.length === 0)
-      setError('Please add at least 1 photo so buyers can see the item.');
+      setError('Please add at least 1 photo so buyers can see what you\'re selling.');
     setFieldErrors(errs);
-    return Object.keys(errs).length === 0 && imageItems.length > 0;
+    return Object.keys(errs).length === 0 && imageItems.length > 0;	
   };
-  
+
   const handleSubmit = async () => {
     if (!validate()) return;
     setLoading(true); setError('');
     try {
-      await api.post('/api/products', { ...form, price: Number(form.price), images: imageItems.map(i => i.base64) });
+      await api.post('/api/products', {
+        ...form,
+        price:  Number(form.price),
+        images: imageItems.map(item => item.base64),
+      });
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create listing.');
+      setError(err.response?.data?.error || 'Failed to create listing. Try again.');
     } finally { setLoading(false); }
   };
+
+  // Total size info for the seller
+  const totalCompressedKB = imageItems.reduce((sum, item) => sum + item.compressedKB, 0);
+  const totalOriginalKB   = imageItems.reduce((sum, item) => sum + item.originalKB, 0);
 
   return (
     <div className="page-narrow">
@@ -92,6 +112,7 @@ const Sell = () => {
         Your listing goes live after admin review, usually within a few hours.
       </p>
 
+      {/* Responsibility notice */}
       <div style={{ display: 'flex', gap: '10px', padding: '12px 14px', background: 'var(--color-warning-subtle)', border: '1px solid #fde68a', borderRadius: 'var(--radius-sm)', marginBottom: '24px' }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--color-warning)', flexShrink: 0, marginTop: '1px' }}>
           <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
@@ -112,7 +133,8 @@ const Sell = () => {
             onChange={handleChange} placeholder="0" required error={fieldErrors.price} />
           <div>
             <label className="label">Category</label>
-            <select name="category" value={form.category} onChange={handleChange} className="input" style={{ cursor: 'pointer' }}>
+            <select name="category" value={form.category} onChange={handleChange}
+              className="input" style={{ cursor: 'pointer' }}>
               {CATEGORIES.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
@@ -123,42 +145,77 @@ const Sell = () => {
           <label className="label">
             Photos
             <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>
-              {' '}({imageItems.length}/{MAX_IMAGES}, max 3MB each)
+              {' '}({imageItems.length}/{MAX_IMAGES} — images are automatically compressed)
             </span>
           </label>
 
+          {/* Selected images */}
           {imageItems.length > 0 && (
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
-              {imageItems.map((item, i) => (
-                <div key={i} style={{ position: 'relative', width: '88px', height: '88px' }}>
-                  <img src={item.preview} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)' }} />
-                  {/* Remove button */}
-                  <button onClick={() => removeImage(i)} title="Remove image"
-                    style={{ position: 'absolute', top: '-6px', right: '-6px', width: '20px', height: '20px', background: '#0a0a0a', color: 'white', border: '2px solid white', borderRadius: '50%', cursor: 'pointer', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
-                    ×
-                  </button>
-                  <span style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'rgba(0,0,0,0.55)', color: 'white', fontSize: '10px', fontWeight: 600, padding: '1px 5px', borderRadius: '3px' }}>
-                    {i + 1}
-                  </span>
-                </div>
-              ))}
+            <>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                {imageItems.map((item, i) => (
+                  <div key={i} style={{ position: 'relative', width: '88px' }}>
+                    <div style={{ width: '88px', height: '88px', position: 'relative' }}>
+                      <img src={item.preview} alt={item.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', display: 'block' }} />
+                      {/* Remove button */}
+                      <button onClick={() => removeImage(i)} title="Remove"
+                        style={{ position: 'absolute', top: '-6px', right: '-6px', width: '20px', height: '20px', background: '#0a0a0a', color: 'white', border: '2px solid white', borderRadius: '50%', cursor: 'pointer', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+                        ×
+                      </button>
+                      {/* Image number */}
+                      <span style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'rgba(0,0,0,0.55)', color: 'white', fontSize: '10px', fontWeight: 600, padding: '1px 5px', borderRadius: '3px' }}>
+                        {i + 1}
+                      </span>
+                    </div>
+                    {/* Compression info per image */}
+                    {item.savedPercent > 0 && (
+                      <p style={{ fontSize: '10px', color: 'var(--color-accent)', margin: '3px 0 0', textAlign: 'center', fontWeight: 500 }}>
+                        -{item.savedPercent}%
+                      </p>
+                    )}
+                  </div>
+                ))}
 
-              {/* Add more slot */}
-              {imageItems.length < MAX_IMAGES && (
-                <label style={{ width: '88px', height: '88px', border: '2px dashed var(--color-border)', borderRadius: 'var(--radius-sm)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '11px', transition: 'border-color 0.15s' }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-border-strong)'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
-                  Add
-                  <input type="file" accept="image/*" multiple onChange={handleAddImages} style={{ display: 'none' }} />
-                </label>
+                {/* Add more slot */}
+                {imageItems.length < MAX_IMAGES && !compressing && (
+                  <label style={{ width: '88px', height: '88px', border: '2px dashed var(--color-border)', borderRadius: 'var(--radius-sm)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '11px', transition: 'border-color 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-border-strong)'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Add
+                    <input type="file" accept="image/*" multiple onChange={handleAddImages} style={{ display: 'none' }} />
+                  </label>
+                )}
+              </div>
+
+              {/* Total compression summary */}
+              {totalOriginalKB > 0 && (
+                <div style={{ padding: '8px 12px', background: 'var(--color-accent-subtle)', border: '1px solid #6ee7b7', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Compressed: {totalOriginalKB > 1024 ? `${(totalOriginalKB/1024).toFixed(1)}MB` : `${totalOriginalKB}KB`} → {totalCompressedKB > 1024 ? `${(totalCompressedKB/1024).toFixed(1)}MB` : `${totalCompressedKB}KB`}
+                  {' '}({Math.round((1 - totalCompressedKB/totalOriginalKB) * 100)}% smaller)
+                </div>
               )}
+            </>
+          )}
+
+          {/* Compressing state */}
+          {compressing && (
+            <div style={{ padding: '16px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ animation: 'spin 0.8s linear infinite' }}>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" strokeOpacity="0.2"/>
+                <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+              </svg>
+              Compressing images…
             </div>
           )}
 
-          {imageItems.length === 0 && (
+          {/* Initial upload area */}
+          {imageItems.length === 0 && !compressing && (
             <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '28px', border: '2px dashed var(--color-border)', borderRadius: 'var(--radius-md)', cursor: 'pointer', background: 'var(--color-bg-subtle)', transition: 'border-color 0.15s, background 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-border-strong)'; e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.background = 'var(--color-bg-subtle)'; }}>
@@ -166,7 +223,9 @@ const Sell = () => {
                 <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
               </svg>
               <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>Click to upload photos</span>
-              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Up to {MAX_IMAGES} photos, 3MB each</span>
+              <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                Up to {MAX_IMAGES} photos · Any size · Automatically compressed
+              </span>
               <input type="file" accept="image/*" multiple onChange={handleAddImages} style={{ display: 'none' }} />
             </label>
           )}
@@ -178,7 +237,9 @@ const Sell = () => {
           </div>
         )}
 
-        <Button fullWidth loading={loading} onClick={handleSubmit}>Submit for Review</Button>
+        <Button fullWidth loading={loading} onClick={handleSubmit}>
+          Submit for Review
+        </Button>
       </div>
     </div>
   );
