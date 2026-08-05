@@ -12,6 +12,7 @@ const Profile = () => {
     telegram:  user?.telegram  || '',
     reddit:    user?.reddit    || '',
     linkedin:  user?.linkedin  || '',
+    other_contact_details: user?.other_contact_details || '',
   });
   const [saving, setSaving]   = useState(false);
   const [success, setSuccess] = useState(false);
@@ -68,6 +69,17 @@ const Profile = () => {
             <Input label="Telegram"  name="telegram"  value={form.telegram}  onChange={handleChange} prefix="@" placeholder="username" />
             <Input label="Reddit"    name="reddit"    value={form.reddit}    onChange={handleChange} prefix="u/" placeholder="username" />
             <Input label="LinkedIn"  name="linkedin"  value={form.linkedin}  onChange={handleChange} prefix="in/" placeholder="your-profile-slug" />
+            <Input
+              label="Other contact details"
+              name="other_contact_details"
+              value={form.other_contact_details}
+              onChange={handleChange}
+              placeholder="For example: WhatsApp: 9876543210, Discord: username"
+              hint="Optional. Add any other way a buyer can reach you."
+              textarea
+              rows={2}
+              maxLength={500}
+            />
           </div>
         </div>
 

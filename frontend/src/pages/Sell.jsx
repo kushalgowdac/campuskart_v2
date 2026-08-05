@@ -4,6 +4,7 @@ import api from '../api';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { compressMultiple } from '../utils/compressImage';
+import { useAuth } from '../context/AuthContext';
 
 const CATEGORIES = ['Books', 'Electronics', 'Clothing', 'Stationery', 'Sports', 'Other'];
 const MAX_IMAGES = 4;
@@ -15,7 +16,15 @@ const ABSOLUTE_MAX_BYTES = 20 * 1024 * 1024; // 20MB
 
 const Sell = () => {
   const navigate = useNavigate();
+  const { user, login } = useAuth();
   const [form, setForm]   = useState({ title: '', description: '', price: '', category: 'Books' });
+  const [contactForm, setContactForm] = useState({
+    instagram:            user?.instagram || '',
+    telegram:             user?.telegram || '',
+    reddit:               user?.reddit || '',
+    linkedin:             user?.linkedin || '',
+    other_contact_details: user?.other_contact_details || '',
+  });
   const [imageItems, setImageItems] = useState([]); // [{ base64, preview, name, originalKB, compressedKB, savedPercent }]
   const [compressing, setCompressing] = useState(false); // true while canvas is working
   const [loading, setLoading]         = useState(false);
@@ -25,6 +34,10 @@ const Sell = () => {
   const handleChange = e => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
     setFieldErrors(prev => ({ ...prev, [e.target.name]: '' }));
+  };
+
+  const handleContactChange = e => {
+    setContactForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleAddImages = async (e) => {
@@ -90,6 +103,11 @@ const Sell = () => {
     if (!validate()) return;
     setLoading(true); setError('');
     try {
+      // Contact methods belong to the seller's profile so every listing always
+      // uses the latest information and future listing forms can pre-fill it.
+      const profileRes = await api.put('/api/auth/profile', contactForm);
+      login(null, profileRes.data);
+
       await api.post('/api/products', {
         ...form,
         price:  Number(form.price),
@@ -138,6 +156,43 @@ const Sell = () => {
               {CATEGORIES.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
+        </div>
+
+        {/* Buyer communication section */}
+        <div className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <h2 style={{ fontSize: '15px', fontWeight: 650, margin: '0 0 5px' }}>
+              How buyers can contact you
+            </h2>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', margin: 0, lineHeight: 1.55 }}>
+              After a buyer clicks <strong style={{ color: 'var(--color-text-secondary)' }}>“I’m Interested”</strong>, they can see the contact methods below. Communication happens outside CampusKart. Any changes you make here will also be saved to your Profile for future listings.
+            </p>
+          </div>
+
+          <div>
+            <label className="label">Email</label>
+            <input value={user?.email || ''} disabled className="input" aria-label="Email" />
+            <p className="text-muted" style={{ marginTop: '4px' }}>Provided by your Google account.</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '12px' }}>
+            <Input label="Instagram" name="instagram" value={contactForm.instagram} onChange={handleContactChange} prefix="@" placeholder="username" />
+            <Input label="Telegram" name="telegram" value={contactForm.telegram} onChange={handleContactChange} prefix="@" placeholder="username" />
+            <Input label="Reddit" name="reddit" value={contactForm.reddit} onChange={handleContactChange} prefix="u/" placeholder="username" />
+            <Input label="LinkedIn" name="linkedin" value={contactForm.linkedin} onChange={handleContactChange} prefix="in/" placeholder="profile-slug" />
+          </div>
+
+          <Input
+            label="Other contact details"
+            name="other_contact_details"
+            value={contactForm.other_contact_details}
+            onChange={handleContactChange}
+            placeholder="For example: WhatsApp: 9876543210, Discord: username"
+            hint="Optional. Add any other way a buyer can reach you."
+            textarea
+            rows={2}
+            maxLength={500}
+          />
         </div>
 
         {/* Image section */}

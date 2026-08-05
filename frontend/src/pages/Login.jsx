@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, supabase } from '../context/AuthContext';
-import Button from '../components/Button';
 
 // ── Why this login page looks different from a typical form ──
 // Most login pages show email + password fields because most apps
@@ -33,6 +32,8 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError('');
+    // Survives the OAuth redirect and is cleared when the guide is acknowledged.
+    sessionStorage.setItem('show-marketplace-guide', 'true');
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -40,6 +41,7 @@ const Login = () => {
       });
       if (error) throw error;
     } catch (err) {
+      sessionStorage.removeItem('show-marketplace-guide');
       setError(err.message || 'Failed to start Google login.');
       setLoading(false);
     }

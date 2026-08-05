@@ -226,9 +226,25 @@ const ContactSeller = () => {
                 </div>
               </a>
             ))}
+
+            {seller.other_contact_details && (
+              <div style={{ padding: '14px 16px', background: 'white', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                  <span style={{ color: 'var(--color-text-secondary)', display: 'flex' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                    </svg>
+                  </span>
+                  <span style={{ fontSize: '14px', fontWeight: 500 }}>Other contact details</span>
+                </div>
+                <p style={{ margin: 0, paddingLeft: '28px', fontSize: '13px', lineHeight: 1.6, color: 'var(--color-text-secondary)', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                  {seller.other_contact_details}
+                </p>
+              </div>
+            )}
           </div>
 
-          {availableChannels.length === 0 && (
+          {availableChannels.length === 0 && !seller.other_contact_details && (
             <div className="card" style={{ padding: '16px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '14px' }}>
               The seller hasn't added contact info yet. They've been notified of your interest.
             </div>
