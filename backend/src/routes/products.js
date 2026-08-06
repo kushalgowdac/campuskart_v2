@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   listProducts,
+  listClosedProducts,
   getMyProducts,
   getProductById,
   createProduct,
@@ -15,9 +16,10 @@ const router = Router();
 
 // ── Public route ──
 router.get('/',   listProducts);    // GET /api/products
+router.get('/closed', listClosedProducts); // GET /api/products/closed
 // ── Protected route ──
-// IMPORTANT: /mine must come BEFORE /:id
-// Otherwise Express matches 'mine' as the :id parameter
+// IMPORTANT: named routes must come BEFORE /:id.
+// Otherwise Express matches the route name as the :id parameter.
 router.get('/mine',verifyToken, getMyProducts);   // GET /api/products/mine
 // ── Public route ──
 router.get('/:id', getProductById); // GET /api/products/:id

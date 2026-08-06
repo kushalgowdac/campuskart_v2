@@ -188,6 +188,7 @@ const Browse = () => {
         .marketplace-guide-section ul { margin: 0; padding-left: 18px; color: var(--color-text-secondary); font-size: 13px; line-height: 1.55; }
         .marketplace-guide-section li + li { margin-top: 9px; }
         .marketplace-guide-section strong { color: var(--color-text-primary); font-weight: 600; }
+        .marketplace-guide-seller-note { margin-top: 14px; padding: 11px 12px; border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); background: white; color: var(--color-text-primary); font-size: 13px; font-weight: 650; line-height: 1.5; }
         .marketplace-guide-footer { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-top: 22px; }
         .marketplace-guide-footer p { margin: 0; max-width: 330px; color: var(--color-text-muted); font-size: 12px; line-height: 1.5; }
         @keyframes guide-enter { from { opacity: 0; transform: translateY(8px) scale(0.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -234,6 +235,9 @@ const Browse = () => {
             >
               {refreshing ? 'Refreshing…' : '↻ Refresh listings'}
             </button>
+            <Link to="/closed-deals" className="btn-secondary" style={{ padding: '9px 12px', fontSize: '13px' }}>
+              Closed deals
+            </Link>
             <Link to="/sell" className="btn-primary" style={{ padding: '9px 16px', fontSize: '13px' }}>+ List item</Link>
           </div>
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: '2px' }}>

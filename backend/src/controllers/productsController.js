@@ -158,6 +158,65 @@ export const listProducts = async (req, res) => {
   }
 };
 
+// ── listClosedProducts ───────────────────────────────────────
+// GET /api/products/closed?page=cursor&cursor=...
+// Public — shows sold items until their original 90-day listing expiry.
+export const listClosedProducts = async (req, res) => {
+  try {
+    const { cursor } = req.query;
+    const decodedCursor = decodeProductCursor(cursor, '');
+    if (cursor && !decodedCursor) {
+      return res.status(400).json({ error: 'Invalid pagination cursor.' });
+    }
+
+    let query = supabase
+      .from('products')
+      .select(`
+        id, title, price, category, image_urls, created_at, expires_at,
+        seller:seller_id (
+          id, name
+        )
+      `)
+      .eq('status', 'sold')
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(PRODUCT_PAGE_SIZE + 1);
+
+    if (decodedCursor) {
+      query = query.or(
+        `created_at.lt.${decodedCursor.value},` +
+        `and(created_at.eq.${decodedCursor.value},id.lt.${decodedCursor.id})`
+      );
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error('[listClosedProducts] error:', error.message);
+      return res.status(500).json({ error: 'Failed to fetch closed deals.' });
+    }
+
+    const rows = data || [];
+    const hasNextPage = rows.length > PRODUCT_PAGE_SIZE;
+    const pageRows = rows.slice(0, PRODUCT_PAGE_SIZE);
+    const items = pageRows.map(({ image_urls: imageUrls, ...product }) => ({
+      ...product,
+      image_url: imageUrls?.[0] || null,
+    }));
+    const lastProduct = pageRows.at(-1);
+
+    return res.json({
+      items,
+      nextCursor: hasNextPage && lastProduct
+        ? encodeProductCursor(lastProduct, '')
+        : null,
+    });
+  } catch (err) {
+    console.error('[listClosedProducts] unexpected error:', err.message);
+    return res.status(500).json({ error: 'Server error.' });
+  }
+};
+
 // ── getMyProducts ─────────────────────────────────────────────
 // GET /api/products/mine
 // Protected — returns ALL of this seller's listings (all statuses)

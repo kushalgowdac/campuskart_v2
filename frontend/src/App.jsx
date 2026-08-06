@@ -8,6 +8,7 @@ import Browse from './pages/Browse';
 
 const Login = lazy(() => import('./pages/Login'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const ClosedDeals = lazy(() => import('./pages/ClosedDeals'));
 const ContactSeller = lazy(() => import('./pages/ContactSeller'));
 const Sell = lazy(() => import('./pages/Sell'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -43,6 +44,7 @@ function App() {
             <Route path="/" element={<Browse />} />
             <Route path="/login" element={<Login />} />
             <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/closed-deals" element={<ClosedDeals />} />
 
             {/* Protected — must be logged in */}
             <Route path="/contact/:productId" element={<ProtectedRoute><ContactSeller /></ProtectedRoute>} />

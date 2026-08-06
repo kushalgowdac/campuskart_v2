@@ -11,8 +11,8 @@
 //
 // WHY do we need this?
 // Without cleanup, the DB fills up with dead listings forever.
-// Sellers forget to mark things sold. 90 days is enough time — if
-// something doesn't sell in 3 months, it's probably not going to.
+// Sold items stay visible in Closed deals until the same original
+// 90-day expiry, then their database row and images are removed too.
 // ============================================================
 
 import { supabase } from '../db/supabase.js';
@@ -54,7 +54,7 @@ const notifyExpiringSoon = async () => {
         user_id:    product.seller_id,
         type:       'expiring_soon',
         title:      '⏰ Listing expiring soon',
-        message:    `Your listing "${product.title}" will be automatically deleted in ${daysLeft} day(s). Mark it as sold or it will be removed.`,
+        message:    `Your listing "${product.title}" will be automatically deleted in ${daysLeft} day(s). If it has sold, mark it as sold so it appears in Closed deals until then.`,
         product_id: product.id,
       });
 
@@ -68,11 +68,15 @@ const notifyExpiringSoon = async () => {
 const deleteExpiredProducts = async () => {
   const now = new Date();
 
-  const { data: expired } = await supabase
+  const { data: expired, error } = await supabase
     .from('products')
     .select('id, title, public_ids')
-    .in('status', ['live', 'hidden', 'pending', 'rejected'])
+    .in('status', ['live', 'hidden', 'pending', 'rejected', 'sold'])
     .lt('expires_at', now.toISOString()); // expires_at < now
+
+  if (error) {
+    throw new Error(`Could not fetch expired products: ${error.message}`);
+  }
 
   if (!expired || expired.length === 0) {
     console.log('[Cleanup] No expired products found.');

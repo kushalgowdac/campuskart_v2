@@ -57,8 +57,11 @@ const MarketplaceGuideModal = ({ onAcknowledge }) => {
             <ul>
               <li>Create a listing with clear photos. It will go live after admin approval.</li>
               <li>Manage your listings from the dashboard and mark items as sold or hidden.</li>
-              <li>Listings automatically expire after 90 days.</li>
+              <li>Sold items move to Closed deals. Every listing is removed 90 days after it was posted.</li>
             </ul>
+            <div className="marketplace-guide-seller-note">
+              You can edit your price and description later from My Listings, even after the item is placed for sale. Edits are sent for review again.
+            </div>
           </div>
         </div>
 

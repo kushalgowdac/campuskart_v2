@@ -112,7 +112,7 @@ CREATE TABLE products (
   approved_by uuid REFERENCES users(id) ON DELETE SET NULL,
 
   -- Auto-set to 90 days from creation
-  -- The cleanup job checks: WHERE expires_at < now() AND status NOT IN ('sold','expired')
+  -- The cleanup job deletes every listing (including sold ones) after this date.
   expires_at  timestamptz NOT NULL DEFAULT (now() + interval '90 days'),
 
   created_at  timestamptz NOT NULL DEFAULT now()
