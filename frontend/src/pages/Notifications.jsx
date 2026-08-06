@@ -12,6 +12,7 @@ const ICONS = {
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadedAt, setLoadedAt] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,14 +22,19 @@ const Notifications = () => {
         const res = await api.get('/api/notifications');
         setNotifications(res.data.notifications);
         await api.patch('/api/notifications/read-all');
-      } catch {}
-      finally { setLoading(false); }
+      } catch {
+        // The empty state is a safe fallback when notifications cannot load.
+      }
+      finally {
+        setLoadedAt(Date.now());
+        setLoading(false);
+      }
     };
     loadNotifications();
   }, []);
 
   const timeAgo = (dateStr) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    const diff = loadedAt - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1)  return 'Just now';
     if (mins < 60) return `${mins}m ago`;

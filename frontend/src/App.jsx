@@ -1,19 +1,28 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import Browse from './pages/Browse';
-import Login from './pages/Login';
-import ProductDetail from './pages/ProductDetail';
-import ContactSeller from './pages/ContactSeller';
-import Sell from './pages/Sell';
-import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
-import Admin from './pages/Admin';
-import Notifications from './pages/Notifications';
-import Setup from './pages/Setup';
-import Contribute from './pages/Contribute';
+
+const Login = lazy(() => import('./pages/Login'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const ContactSeller = lazy(() => import('./pages/ContactSeller'));
+const Sell = lazy(() => import('./pages/Sell'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Admin = lazy(() => import('./pages/Admin'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const Setup = lazy(() => import('./pages/Setup'));
+const Contribute = lazy(() => import('./pages/Contribute'));
+
+const RouteFallback = () => (
+  <div className="page">
+    <div className="skeleton" style={{ height: '24px', width: '180px', marginBottom: '20px', borderRadius: '4px' }} />
+    <div className="skeleton" style={{ height: '180px', width: '100%', borderRadius: 'var(--radius-lg)' }} />
+  </div>
+);
 
 // ── Why ErrorBoundary wraps everything here ────────────────
 // Placing it ONCE at the top level (inside BrowserRouter, outside Routes)
@@ -28,7 +37,8 @@ function App() {
       <BrowserRouter>
         <ErrorBoundary>
           <Navbar />
-          <Routes>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
             {/* Public */}
             <Route path="/" element={<Browse />} />
             <Route path="/login" element={<Login />} />
@@ -60,7 +70,8 @@ function App() {
                 </a>
               </div>
             } />
-          </Routes>
+            </Routes>
+          </Suspense>
         </ErrorBoundary>
       </BrowserRouter>
     </AuthProvider>

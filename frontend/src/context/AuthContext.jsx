@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import api from '../api';
@@ -64,7 +65,9 @@ export const AuthProvider = ({ children }) => {
       if (stored) {
         setUser(JSON.parse(stored));
       }
-      } catch {}
+      } catch {
+        localStorage.removeItem('user');
+      }
       }
     setLoading(false);
       });

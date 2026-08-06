@@ -3,6 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 import Button from '../components/Button';
+import { productDetailImage, squareThumbnailImage } from '../utils/cloudinaryImage';
+import {
+  PRODUCT_DETAIL_CACHE_TTL,
+  productDetailCacheKey,
+  readMarketplaceCache,
+  writeMarketplaceCache,
+} from '../utils/marketplaceCache';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -16,17 +23,37 @@ const ProductDetail = () => {
   const [interested, setInterested] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+    const cacheKey = productDetailCacheKey(id);
     const load = async () => {
+      // Keep state updates asynchronous when this function is started by an effect.
+      await Promise.resolve();
+      if (cancelled) return;
+      setLoading(true);
+      setError('');
+      setActiveImage(0);
+      const cached = readMarketplaceCache(cacheKey, PRODUCT_DETAIL_CACHE_TTL);
+      if (cached) {
+        if (cancelled) return;
+        setProduct(cached.data);
+        setLoading(false);
+        return;
+      }
+
       try {
         const res = await api.get(`/api/products/${id}`);
+        if (cancelled) return;
         setProduct(res.data);
+        writeMarketplaceCache(cacheKey, res.data);
       } catch {
+        if (cancelled) return;
         setError('Product not found or no longer available.');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     load();
+    return () => { cancelled = true; };
   }, [id]);
 
   const formatPrice = (price) =>
@@ -97,7 +124,7 @@ const ProductDetail = () => {
               title="Click to view full size"
             >
               {images.length > 0 ? (
-                <img src={images[activeImage]} alt={product.title} className="main-img" loading="eager" />
+                <img src={productDetailImage(images[activeImage])} alt={product.title} className="main-img" loading="eager" />
               ) : (
                 <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -111,7 +138,7 @@ const ProductDetail = () => {
             {images.length > 1 && (
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {images.map((url, i) => (
-                  <img key={i} src={url} alt={`Photo ${i + 1}`}
+                  <img key={i} src={squareThumbnailImage(url)} alt={`Photo ${i + 1}`}
                     className={`thumb${i === activeImage ? ' active' : ''}`}
                     loading="lazy" onClick={() => setActiveImage(i)} />
                 ))}

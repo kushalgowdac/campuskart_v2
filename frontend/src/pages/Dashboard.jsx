@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import Button from '../components/Button';
+import Input from '../components/Input';
+import { squareThumbnailImage } from '../utils/cloudinaryImage';
 
 const STATUS_STYLES = {
   pending:  { className: 'badge-amber', label: 'Pending Review' },
@@ -16,8 +18,12 @@ const Dashboard = () => {
   const [products, setProducts]       = useState([]);
   const [loading, setLoading]         = useState(true);
   const [actionError, setActionError] = useState('');
+  const [actionNotice, setActionNotice] = useState('');
   const [busyId, setBusyId]           = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null); // id of product pending confirm
+  const [editingId, setEditingId]     = useState(null);
+  const [editForm, setEditForm]       = useState({ price: '', description: '' });
+  const [editErrors, setEditErrors]   = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,7 +34,7 @@ const Dashboard = () => {
   }, []);
 
   const updateStatus = async (id, status) => {
-    setBusyId(id); setActionError('');
+    setBusyId(id); setActionError(''); setActionNotice('');
     try {
       await api.patch(`/api/products/${id}/status`, { status });
       setProducts(prev => prev.map(p => p.id === id ? { ...p, status } : p));
@@ -38,13 +44,67 @@ const Dashboard = () => {
   };
 
   const deleteProduct = async (id) => {
-    setBusyId(id); setActionError(''); setConfirmDelete(null);
+    setBusyId(id); setActionError(''); setActionNotice(''); setConfirmDelete(null);
     try {
       await api.delete(`/api/products/${id}`);
       setProducts(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       setActionError(err.response?.data?.error || 'Failed to delete listing.');
     } finally { setBusyId(null); }
+  };
+
+  const startEditing = (product) => {
+    setEditingId(product.id);
+    setEditForm({
+      price: String(product.price),
+      description: product.description || '',
+    });
+    setEditErrors({});
+    setActionError('');
+    setActionNotice('');
+    setConfirmDelete(null);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditErrors({});
+  };
+
+  const saveListingDetails = async (event, id) => {
+    event.preventDefault();
+    const errors = {};
+    const numericPrice = Number(editForm.price);
+
+    if (editForm.price.trim() === '' || !Number.isFinite(numericPrice) || numericPrice < 0) {
+      errors.price = 'Enter a valid non-negative price.';
+    }
+    if (editForm.description.trim().length > 2000) {
+      errors.description = 'Description must be 2000 characters or fewer.';
+    }
+    if (Object.keys(errors).length) {
+      setEditErrors(errors);
+      return;
+    }
+
+    setBusyId(id);
+    setActionError('');
+    setActionNotice('');
+    try {
+      const res = await api.patch(`/api/products/${id}/details`, {
+        price: numericPrice,
+        description: editForm.description,
+      });
+      setProducts(previous => previous.map(product =>
+        product.id === id ? { ...product, ...res.data.product } : product
+      ));
+      setEditingId(null);
+      setEditErrors({});
+      setActionNotice('Listing updated and sent for admin review.');
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Failed to update listing.');
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const formatPrice = (price) =>
@@ -80,6 +140,12 @@ const Dashboard = () => {
         </div>
       )}
 
+      {actionNotice && (
+        <div style={{ padding: '12px 16px', background: 'var(--color-accent-subtle)', border: '1px solid #6ee7b7', borderRadius: 'var(--radius-md)', color: '#065f46', fontSize: '13px', marginBottom: '20px' }}>
+          {actionNotice}
+        </div>
+      )}
+
       {/* Inline delete confirmation — replaces window.confirm() entirely */}
       {confirmDelete && (
         <div style={{ padding: '14px 16px', background: 'var(--color-warning-subtle)', border: '1px solid #fde68a', borderRadius: 'var(--radius-md)', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
@@ -111,6 +177,7 @@ const Dashboard = () => {
           {products.map(p => {
             const status = STATUS_STYLES[p.status] || STATUS_STYLES.pending;
             const isBusy = busyId === p.id;
+            const isEditing = editingId === p.id;
 
             // Extract rejection reason from the notification message stored on the product.
             // The backend stores it in the notifications table — we don't have it directly
@@ -122,7 +189,7 @@ const Dashboard = () => {
                 {/* Thumbnail */}
                 <div style={{ width: '72px', height: '72px', background: 'var(--color-bg-subtle)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', flexShrink: 0 }}>
                   {p.image_urls?.[0]
-                    ? <img src={p.image_urls[0]} alt={p.title} loading="lazy"
+                    ? <img src={squareThumbnailImage(p.image_urls[0])} alt={p.title} loading="lazy"
                         style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
                         onClick={() => window.open(p.image_urls[0], '_blank')}
                       />
@@ -139,6 +206,58 @@ const Dashboard = () => {
                   </div>
                   <p className="text-price" style={{ fontSize: '15px', marginBottom: '10px' }}>{formatPrice(p.price)}</p>
 
+                  {!isEditing && p.description && (
+                    <p style={{ margin: '0 0 10px', color: 'var(--color-text-secondary)', fontSize: '13px', lineHeight: 1.5, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                      {p.description}
+                    </p>
+                  )}
+
+                  {isEditing && (
+                    <form onSubmit={event => saveListingDetails(event, p.id)} style={{ padding: '14px', marginBottom: '12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', background: 'var(--color-bg-subtle)' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <Input
+                          label="Price (₹)"
+                          name="price"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          required
+                          value={editForm.price}
+                          error={editErrors.price}
+                          onChange={event => {
+                            setEditForm(previous => ({ ...previous, price: event.target.value }));
+                            setEditErrors(previous => ({ ...previous, price: '' }));
+                          }}
+                        />
+                        <Input
+                          label="Description"
+                          name="description"
+                          textarea
+                          rows={3}
+                          maxLength={2000}
+                          value={editForm.description}
+                          error={editErrors.description}
+                          onChange={event => {
+                            setEditForm(previous => ({ ...previous, description: event.target.value }));
+                            setEditErrors(previous => ({ ...previous, description: '' }));
+                          }}
+                          hint={`${editForm.description.length}/2000 characters`}
+                        />
+                        <p style={{ margin: 0, color: '#92400e', fontSize: '12px', lineHeight: 1.5 }}>
+                          Saving changes temporarily removes this listing from Browse and sends it for admin review again.
+                        </p>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <Button type="submit" loading={isBusy} style={{ padding: '6px 12px', fontSize: '12px' }}>
+                            Save changes
+                          </Button>
+                          <Button type="button" variant="secondary" disabled={isBusy} onClick={cancelEditing} style={{ padding: '6px 12px', fontSize: '12px' }}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    </form>
+                  )}
+
                   {/* Rejection notice — shown inline on the card */}
                   {isRejected && (
                     <div style={{ padding: '10px 12px', background: 'var(--color-danger-subtle)', border: '1px solid #fecaca', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-danger)', marginBottom: '10px', lineHeight: 1.5 }}>
@@ -147,7 +266,10 @@ const Dashboard = () => {
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {!isEditing && <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {(p.status === 'live' || p.status === 'hidden') && (
+                      <Button variant="secondary" disabled={isBusy} onClick={() => startEditing(p)} style={{ padding: '5px 12px', fontSize: '12px' }}>Edit price & description</Button>
+                    )}
                     {p.status === 'live' && (
                       <Button variant="secondary" loading={isBusy} onClick={() => updateStatus(p.id, 'hidden')} style={{ padding: '5px 12px', fontSize: '12px' }}>Hide</Button>
                     )}
@@ -160,7 +282,7 @@ const Dashboard = () => {
                     {p.status !== 'sold' && (
                       <Button variant="danger" loading={isBusy} onClick={() => { setConfirmDelete(p.id);   window.scrollTo({ top: 0, behavior: 'smooth' }); } }style={{ padding: '5px 12px', fontSize: '12px' }}>Delete</Button>
                     )}
-                  </div>
+                  </div>}
                 </div>
               </div>
             );

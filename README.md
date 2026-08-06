@@ -88,7 +88,9 @@ cd ../frontend && npm install
 
 ### 2. Set up the database
 
-Go to your Supabase project → SQL Editor → paste and run `database/migration_v2.sql`, then `database/rls_fix.sql`.
+Go to your Supabase project → SQL Editor → paste and run `database/migration_v2.sql`, then `database/add_product_pagination_indexes.sql`.
+
+The index migration is safe to rerun because every index uses `IF NOT EXISTS`.
 
 ### 3. Configure environment variables
 
@@ -150,6 +152,22 @@ After your first login, go to Supabase → Table Editor → users → find your 
 | Frontend | Vercel | Auto-deploys on push to main |
 | Backend | Render | Free tier — set env vars in dashboard |
 | Database | Supabase | Free tier — keepalive ping prevents pause |
+
+### Updating the live database
+
+Do **not** run `database/migration_v2.sql` against the live database. It is a
+clean-install migration and drops existing tables before recreating them.
+
+For this release, run only these additive migrations in Supabase SQL Editor,
+in this order:
+
+1. `database/add_other_contact_details.sql`
+2. `database/secure_live_rls.sql`
+3. `database/add_product_pagination_indexes.sql`
+
+All three are safe to rerun. Apply them before deploying the backend, then deploy
+the backend before the frontend so active users remain compatible throughout
+the rollout.
 
 **Keep Supabase active:** The backend pings Supabase every 4 days to prevent free-tier automatic pausing. Set up [UptimeRobot](https://uptimerobot.com) to ping your Render backend every 5 minutes to prevent cold starts.
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
 import Button from '../components/Button';
+import { squareThumbnailImage } from '../utils/cloudinaryImage';
 
 const Admin = () => {
   const [tab, setTab]             = useState('pending');
@@ -123,7 +124,7 @@ const Admin = () => {
                       {/* Main image — large enough to actually review */}
                       <div style={{ width: '120px', height: '120px', background: 'var(--color-bg-subtle)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
                         {p.image_urls?.[0]
-                          ? <img src={p.image_urls[0]} alt={p.title} loading="lazy"
+                          ? <img src={squareThumbnailImage(p.image_urls[0], 300)} alt={p.title} loading="lazy"
                               style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }}
                               onClick={() => window.open(p.image_urls[0], '_blank')}
                             />
@@ -136,7 +137,7 @@ const Admin = () => {
                           {p.image_urls.slice(1).map((url, i) => (
                             <img
                               key={i}
-                              src={url}
+                              src={squareThumbnailImage(url, 100)}
                               alt={`Photo ${i + 2}`}
                               loading="lazy"
                               title="Click to open full size"

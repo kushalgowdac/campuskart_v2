@@ -41,10 +41,6 @@ CREATE TABLE users (
   -- UNIQUE means no two users can share an email
   email       text NOT NULL UNIQUE,
 
-  -- We store the bcrypt HASH of the password, never the plain text
-  -- bcrypt hash looks like: $2b$10$xyz... (60 characters)
-  password    text NOT NULL,
-
   -- role controls what the user can do:
   -- 'user'  → normal student (can browse, list, buy)
   -- 'admin' → can approve/reject listings
@@ -59,6 +55,9 @@ CREATE TABLE users (
   instagram   text,
   telegram    text,
   reddit      text,
+  linkedin    text,
+  other_contact_details text,
+  is_profile_complete boolean NOT NULL DEFAULT false,
 
   -- timestamptz = timestamp with timezone. Always store timezone-aware timestamps.
   -- now() = current time at the moment of INSERT
@@ -278,27 +277,12 @@ ORDER BY table_name;
 
 
 
--- disable row level security
+-- Browser roles receive only the reads guarded by the RLS policies above.
+-- All mutations go through the backend service role.
+GRANT SELECT ON users, products TO anon, authenticated;
+GRANT SELECT ON contact_requests, notifications TO authenticated;
+GRANT ALL ON users, products, contact_requests, notifications TO service_role;
 
-
-
-
-ALTER TABLE users DISABLE ROW LEVEL SECURITY;
-ALTER TABLE products DISABLE ROW LEVEL SECURITY;
-ALTER TABLE contact_requests DISABLE ROW LEVEL SECURITY;
-ALTER TABLE notifications DISABLE ROW LEVEL SECURITY;
-
-
-SELECT tablename, rowsecurity 
-FROM pg_tables 
+SELECT tablename, rowsecurity
+FROM pg_tables
 WHERE schemaname = 'public';
-
-
-
-
--- grant permission on core tables
-
-GRANT ALL ON users TO anon, authenticated, service_role;
-GRANT ALL ON products TO anon, authenticated, service_role;
-GRANT ALL ON contact_requests TO anon, authenticated, service_role;
-GRANT ALL ON notifications TO anon, authenticated, service_role;

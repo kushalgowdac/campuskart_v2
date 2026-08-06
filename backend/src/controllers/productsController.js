@@ -29,9 +29,48 @@ import { uploadMultiple, deleteMultiple } from '../utils/cloudinary.js';
 // GET /api/products?category=Books&q=chemistry
 // Public — no auth needed. Only returns 'live' products.
 // Supports: category filter, text search, price sort
+const PRODUCT_PAGE_SIZE = 20;
+
+const encodeProductCursor = (product, sort) => {
+  const value = sort === 'price_asc' || sort === 'price_desc'
+    ? Number(product.price)
+    : product.created_at;
+
+  return Buffer.from(JSON.stringify({ value, id: product.id })).toString('base64url');
+};
+
+const decodeProductCursor = (cursor, sort) => {
+  if (!cursor) return null;
+
+  try {
+    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+    const validId = typeof parsed.id === 'string' &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(parsed.id);
+    const validValue = sort === 'price_asc' || sort === 'price_desc'
+      ? Number.isFinite(Number(parsed.value))
+      : typeof parsed.value === 'string' && Number.isFinite(Date.parse(parsed.value));
+
+    return validId && validValue
+      ? { id: parsed.id, value: parsed.value }
+      : null;
+  } catch {
+    return null;
+  }
+};
+
 export const listProducts = async (req, res) => {
   try {
-    const { category, q, sort } = req.query;
+    const { category, q, sort = '', cursor, page } = req.query;
+    const usesPagination = page === 'cursor' || Boolean(cursor);
+    const decodedCursor = decodeProductCursor(cursor, sort);
+    if (cursor && !decodedCursor) {
+      return res.status(400).json({ error: 'Invalid pagination cursor.' });
+    }
+
+    const isPriceSort = sort === 'price_asc' || sort === 'price_desc';
+    const sortColumn = isPriceSort ? 'price' : 'created_at';
+    const ascending = sort === 'price_asc';
+
     // Build query step by step — Supabase SDK is chainable like this.
     // Each .eq(), .ilike(), .order() adds to the query.
     // Nothing runs until we await the final result.
@@ -42,17 +81,18 @@ export const listProducts = async (req, res) => {
       // via the foreign key products.seller_id → users.id
       // This replaces: LEFT JOIN users u ON products.seller_id = u.id
       .select(`
-        id, title, description, price, category,
-        image_urls, status, created_at, expires_at,
+        id, title, price, category, image_urls, created_at,
         seller:seller_id (
-          id, name, email, instagram, telegram, reddit
+          id, name
         )
       `)
       .eq('status', 'live')  // Only show approved products to public
-      .order(
-        sort === 'price_asc' || sort === 'price_desc' ? 'price' : 'created_at',
-        { ascending: sort === 'price_asc' }
-      );
+      .order(sortColumn, { ascending })
+      .order('id', { ascending });
+
+    if (usesPagination) {
+      query = query.limit(PRODUCT_PAGE_SIZE + 1);
+    }
 
     // Apply category filter if provided
     // ?category=Books → AND category = 'Books'
@@ -68,11 +108,17 @@ export const listProducts = async (req, res) => {
       query = query.ilike('title', `%${q.trim()}%`);
     }
 
-    // Price sorting
-    if (sort === 'price_asc') {
-      query = query.order('price', { ascending: true });
-    } else if (sort === 'price_desc') {
-      query = query.order('price', { ascending: false });
+    // Continue strictly after the final item from the previous page. The id
+    // tie-breaker prevents duplicate/skipped products with equal price/time.
+    if (decodedCursor) {
+      const comparison = ascending ? 'gt' : 'lt';
+      const cursorValue = isPriceSort
+        ? Number(decodedCursor.value)
+        : decodedCursor.value;
+      query = query.or(
+        `${sortColumn}.${comparison}.${cursorValue},` +
+        `and(${sortColumn}.eq.${cursorValue},id.${comparison}.${decodedCursor.id})`
+      );
     }
 
     const { data, error } = await query;
@@ -82,7 +128,30 @@ export const listProducts = async (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch products.' });
     }
 
-    return res.json(data || []);
+    const rows = data || [];
+    // Keep the old array response working during a backend-first deployment.
+    // The new frontend opts into cursor pagination with ?page=cursor.
+    if (!usesPagination) {
+      return res.json(rows.map(({ image_urls: imageUrls, ...product }) => ({
+        ...product,
+        image_urls: imageUrls?.slice(0, 1) || [],
+      })));
+    }
+
+    const hasNextPage = rows.length > PRODUCT_PAGE_SIZE;
+    const pageRows = rows.slice(0, PRODUCT_PAGE_SIZE);
+    const items = pageRows.map(({ image_urls: imageUrls, ...product }) => ({
+      ...product,
+      image_url: imageUrls?.[0] || null,
+    }));
+    const lastProduct = pageRows.at(-1);
+
+    return res.json({
+      items,
+      nextCursor: hasNextPage && lastProduct
+        ? encodeProductCursor(lastProduct, sort)
+        : null,
+    });
   } catch (err) {
     console.error('[listProducts] unexpected error:', err.message);
     return res.status(500).json({ error: 'Server error.' });
@@ -321,6 +390,100 @@ export const updateProduct = async (req, res) => {
     return res.json(updated);
   } catch (err) {
     console.error('[updateProduct] unexpected:', err.message);
+    return res.status(500).json({ error: 'Server error.' });
+  }
+};
+
+// ── updateListingDetails ─────────────────────────────────────
+// PATCH /api/products/:id/details
+// Lets the owner change only price/description on an approved listing.
+// The listing returns to pending so edited public content is reviewed again.
+export const updateListingDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { price, description } = req.body;
+
+    if (price === undefined && description === undefined) {
+      return res.status(400).json({ error: 'Price or description is required.' });
+    }
+
+    const numericPrice = price === undefined ? undefined : Number(price);
+    if (price !== undefined && (!Number.isFinite(numericPrice) || numericPrice < 0)) {
+      return res.status(400).json({ error: 'Price must be a valid non-negative number.' });
+    }
+
+    if (description !== undefined && description !== null && typeof description !== 'string') {
+      return res.status(400).json({ error: 'Description must be text.' });
+    }
+
+    if (description?.trim().length > 2000) {
+      return res.status(400).json({ error: 'Description must be 2000 characters or fewer.' });
+    }
+
+    const { data: existing, error: fetchError } = await supabase
+      .from('products')
+      .select('id, seller_id, title, status')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existing) {
+      return res.status(404).json({ error: 'Product not found.' });
+    }
+
+    if (existing.seller_id !== req.user.id) {
+      return res.status(403).json({ error: 'You can only edit your own listings.' });
+    }
+
+    if (!['live', 'hidden'].includes(existing.status)) {
+      return res.status(400).json({
+        error: 'Only live or hidden listings can be edited.',
+      });
+    }
+
+    const { data: updated, error: updateError } = await supabase
+      .from('products')
+      .update({
+        ...(numericPrice !== undefined && { price: numericPrice }),
+        ...(description !== undefined && { description: description?.trim() || null }),
+        status: 'pending',
+        approved_by: null,
+      })
+      .eq('id', id)
+      .select(`
+        id, title, description, price, category,
+        image_urls, status, created_at, expires_at, approved_by
+      `)
+      .single();
+
+    if (updateError) {
+      console.error('[updateListingDetails] error:', updateError.message);
+      return res.status(500).json({ error: 'Failed to update listing.' });
+    }
+
+    // Match new-listing behavior so admins know another review is waiting.
+    const { data: admins } = await supabase
+      .from('users')
+      .select('id')
+      .eq('role', 'admin');
+
+    if (admins?.length) {
+      await supabase.from('notifications').insert(
+        admins.map(admin => ({
+          user_id: admin.id,
+          type: 'approved',
+          title: 'Edited listing pending review',
+          message: `"${existing.title}" was edited and needs your approval.`,
+          product_id: existing.id,
+        }))
+      );
+    }
+
+    return res.json({
+      message: 'Listing updated and sent for review.',
+      product: updated,
+    });
+  } catch (err) {
+    console.error('[updateListingDetails] unexpected:', err.message);
     return res.status(500).json({ error: 'Server error.' });
   }
 };

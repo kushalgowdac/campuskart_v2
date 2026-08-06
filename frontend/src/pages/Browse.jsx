@@ -1,11 +1,21 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import ProductCard from '../components/ProductCard';
 import MarketplaceGuideModal from '../components/MarketplaceGuideModal';
 import { useAuth } from '../context/AuthContext';
+import {
+  PRODUCT_LIST_CACHE_TTL,
+  productListCacheKey,
+  readMarketplaceCache,
+  writeMarketplaceCache,
+} from '../utils/marketplaceCache';
 
 const CATEGORIES = ['All', 'Books', 'Electronics', 'Clothing', 'Stationery', 'Sports', 'Other'];
+
+const normalizeProductsPage = (data) => Array.isArray(data)
+  ? { items: data, nextCursor: null }
+  : { items: data?.items || [], nextCursor: data?.nextCursor || null };
 
 // Skeleton card shows the SHAPE of a product card while data loads.
 // Better UX than "Loading..." text — user sees layout immediately.
@@ -24,7 +34,11 @@ const Browse = () => {
   const { isLoggedIn } = useAuth();
   const [products, setProducts]           = useState([]);
   const [loading, setLoading]             = useState(true);
+  const [refreshing, setRefreshing]       = useState(false);
+  const [loadingMore, setLoadingMore]     = useState(false);
+  const [nextCursor, setNextCursor]       = useState(null);
   const [error, setError]                 = useState('');
+  const [lastUpdated, setLastUpdated]     = useState(null);
   const [searchInput, setSearchInput]     = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const [category, setCategory]           = useState('All');
@@ -32,6 +46,7 @@ const Browse = () => {
   const [showGuide, setShowGuide]         = useState(
     () => sessionStorage.getItem('show-marketplace-guide') === 'true'
   );
+  const requestIdRef = useRef(0);
 
   const acknowledgeGuide = () => {
     sessionStorage.removeItem('show-marketplace-guide');
@@ -40,24 +55,104 @@ const Browse = () => {
 
   // useCallback: memoize this function so it has a stable reference
   // across renders, unless appliedSearch/category/sort actually change.
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
+  const fetchProducts = useCallback(async ({ force = false } = {}) => {
+    const requestId = ++requestIdRef.current;
+    // Keep state updates asynchronous when this function is started by an effect.
+    await Promise.resolve();
+    if (requestId !== requestIdRef.current) return;
     setError('');
+    const params = new URLSearchParams();
+    params.append('page', 'cursor');
+    if (appliedSearch)      params.append('q',        appliedSearch);
+    if (category !== 'All') params.append('category', category);
+    if (sort)               params.append('sort',     sort);
+
+    const queryString = params.toString();
+    const cacheKey = productListCacheKey(queryString);
+    const cached = force
+      ? null
+      : readMarketplaceCache(cacheKey, PRODUCT_LIST_CACHE_TTL);
+
+    if (cached) {
+      if (requestId !== requestIdRef.current) return;
+      const pageData = normalizeProductsPage(cached.data);
+      setProducts(pageData.items);
+      setNextCursor(pageData.nextCursor);
+      setLastUpdated(cached.savedAt);
+      setLoading(false);
+      setLoadingMore(false);
+      setRefreshing(false);
+      return;
+    }
+
+    setLoadingMore(false);
+    if (force) setRefreshing(true);
+    else {
+      setLoading(true);
+      setRefreshing(false);
+    }
+
     try {
-      const params = new URLSearchParams();
-      if (appliedSearch)      params.append('q',        appliedSearch);
-      if (category !== 'All') params.append('category', category);
-      if (sort)               params.append('sort',     sort);
-      const res = await api.get(`/api/products?${params}`);
-      setProducts(res.data);
+      const res = await api.get(`/api/products${queryString ? `?${queryString}` : ''}`);
+      const pageData = normalizeProductsPage(res.data);
+      writeMarketplaceCache(cacheKey, pageData);
+      if (requestId !== requestIdRef.current) return;
+      setProducts(pageData.items);
+      setNextCursor(pageData.nextCursor);
+      setLastUpdated(Date.now());
     } catch {
+      if (requestId !== requestIdRef.current) return;
       setError('Failed to load products.');
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, [appliedSearch, category, sort]);
 
-  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+  const loadMoreProducts = async () => {
+    if (!nextCursor || loadingMore) return;
+
+    const requestId = ++requestIdRef.current;
+    setLoadingMore(true);
+    setError('');
+
+    const params = new URLSearchParams();
+    params.append('page', 'cursor');
+    if (appliedSearch)      params.append('q',        appliedSearch);
+    if (category !== 'All') params.append('category', category);
+    if (sort)               params.append('sort',     sort);
+    const baseQueryString = params.toString();
+    params.append('cursor', nextCursor);
+
+    try {
+      const res = await api.get(`/api/products?${params.toString()}`);
+      if (requestId !== requestIdRef.current) return;
+      const pageData = normalizeProductsPage(res.data);
+
+      setProducts(previous => {
+        const existingIds = new Set(previous.map(product => product.id));
+        const newItems = pageData.items.filter(product => !existingIds.has(product.id));
+        const combined = [...previous, ...newItems];
+        writeMarketplaceCache(productListCacheKey(baseQueryString), {
+          items: combined,
+          nextCursor: pageData.nextCursor,
+        });
+        return combined;
+      });
+      setNextCursor(pageData.nextCursor);
+      setLastUpdated(Date.now());
+    } catch {
+      if (requestId === requestIdRef.current) setError('Failed to load more products.');
+    } finally {
+      if (requestId === requestIdRef.current) setLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    Promise.resolve().then(() => fetchProducts());
+  }, [fetchProducts]);
 
   const handleSearchKeyDown = (e) => {
     if (e.key === 'Enter') setAppliedSearch(searchInput.trim());
@@ -129,7 +224,17 @@ const Browse = () => {
               <option value="price_asc">Price ↑</option>
               <option value="price_desc">Price ↓</option>
             </select>
-            <Link to="/sell" className="btn-primary" style={{ padding: '9px 16px', fontSize: '13px', marginLeft: 'auto' }}>+ List item</Link>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => fetchProducts({ force: true })}
+              disabled={refreshing}
+              style={{ padding: '9px 12px', fontSize: '13px', marginLeft: 'auto' }}
+              title={lastUpdated ? `Last updated ${new Date(lastUpdated).toLocaleTimeString()}` : 'Fetch the latest listings'}
+            >
+              {refreshing ? 'Refreshing…' : '↻ Refresh listings'}
+            </button>
+            <Link to="/sell" className="btn-primary" style={{ padding: '9px 16px', fontSize: '13px' }}>+ List item</Link>
           </div>
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: '2px' }}>
             {CATEGORIES.map(cat => (
@@ -143,7 +248,7 @@ const Browse = () => {
         {!loading && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
             <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-              {products.length === 0 ? 'No listings found' : `${products.length} listing${products.length !== 1 ? 's' : ''}`}
+              {products.length === 0 ? 'No listings found' : `${products.length} listing${products.length !== 1 ? 's' : ''} loaded`}
             </p>
             {appliedSearch && (
               <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
@@ -157,7 +262,7 @@ const Browse = () => {
         {error && (
           <div style={{ padding: '16px', background: 'var(--color-danger-subtle)', border: '1px solid #fecaca', borderRadius: 'var(--radius-md)', color: 'var(--color-danger)', fontSize: '14px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
             {error}
-            <button onClick={fetchProducts} className="btn-secondary" style={{ fontSize: '12px', padding: '5px 10px' }}>Retry</button>
+            <button onClick={() => fetchProducts({ force: true })} className="btn-secondary" style={{ fontSize: '12px', padding: '5px 10px' }}>Retry</button>
           </div>
         )}
 
@@ -179,9 +284,24 @@ const Browse = () => {
         )}
 
         {!loading && products.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
-            {products.map(product => <ProductCard key={product.id} product={product} />)}
-          </div>
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+              {products.map(product => <ProductCard key={product.id} product={product} />)}
+            </div>
+            {nextCursor && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  disabled={loadingMore}
+                  onClick={loadMoreProducts}
+                  style={{ minWidth: '140px' }}
+                >
+                  {loadingMore ? 'Loading…' : 'Load more'}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </>

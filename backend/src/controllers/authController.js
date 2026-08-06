@@ -62,7 +62,7 @@ export const syncUser = async (req, res) => {
     // ── Find or create user in our application users table ──
     let { data: existingUser } = await supabase
       .from('users')
-      .select('id, name, email, role, instagram, telegram, reddit, linkedin, is_profile_complete, created_at')
+      .select('id, name, email, role, instagram, telegram, reddit, linkedin, other_contact_details, is_profile_complete, created_at')
       .eq('email', email)
       .single();
 
@@ -87,13 +87,10 @@ export const syncUser = async (req, res) => {
       .insert({
         email,
         name:  googleName,
-        // No password — Google handles authentication
-        // We store a placeholder so the NOT NULL constraint is satisfied
-        // In production you'd drop the password column entirely after migration
-        // password: 'GOOGLE_OAUTH_NO_PASSWORD',
+        // No password — Google handles authentication.
         role:  'user',
       })
-      .select('id, name, email, role, instagram, telegram, reddit, linkedin, is_profile_complete, created_at')
+      .select('id, name, email, role, instagram, telegram, reddit, linkedin, other_contact_details, is_profile_complete, created_at')
       .single();
 
     if (insertError) {
@@ -117,7 +114,7 @@ export const getMe = async (req, res) => {
   try {
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, name, email, role, instagram, telegram, reddit, linkedin, is_profile_complete, created_at')
+      .select('id, name, email, role, instagram, telegram, reddit, linkedin, other_contact_details, is_profile_complete, created_at')
       .eq('id', req.user.id)
       .single();
 
@@ -134,10 +131,18 @@ export const getMe = async (req, res) => {
 
 // ── updateProfile ─────────────────────────────────────────────
 // PUT /api/auth/profile — protected by verifyToken
-// Seller updates their contact info (instagram, telegram, reddit)
+// Seller updates their profile and contact information.
 export const updateProfile = async (req, res) => {
   try {
-  const { name, instagram, telegram, reddit, linkedin, is_profile_complete } = req.body;
+    const { name, instagram, telegram, reddit, linkedin, other_contact_details, is_profile_complete } = req.body;
+
+    if (other_contact_details !== undefined && typeof other_contact_details !== 'string') {
+      return res.status(400).json({ error: 'Other contact details must be text.' });
+    }
+
+    if (other_contact_details?.trim().length > 500) {
+      return res.status(400).json({ error: 'Other contact details must be 500 characters or fewer.' });
+    }
 
     const { data: updated, error } = await supabase
       .from('users')
@@ -147,10 +152,11 @@ export const updateProfile = async (req, res) => {
         ...(telegram  !== undefined && { telegram:  telegram  || null }),
         ...(reddit    !== undefined && { reddit:    reddit    || null }),
         ...(linkedin    !== undefined && { linkedin:    linkedin    || null }),
+        ...(other_contact_details !== undefined && { other_contact_details: other_contact_details.trim() || null }),
         ...(is_profile_complete !== undefined && { is_profile_complete }),
       })
       .eq('id', req.user.id)
-      .select('id, name, email, role, instagram, telegram, reddit, linkedin, is_profile_complete')
+      .select('id, name, email, role, instagram, telegram, reddit, linkedin, other_contact_details, is_profile_complete')
       .single();
 
     if (error) {

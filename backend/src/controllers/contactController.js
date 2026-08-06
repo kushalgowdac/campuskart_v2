@@ -20,7 +20,7 @@ export const showInterest = async (req, res) => {
 
     const { data: product, error: productError } = await supabase
       .from('products')
-      .select(`id, title, price, status, seller_id, seller:seller_id(id, name, email, instagram, telegram, reddit,linkedin)`)
+      .select(`id, title, price, status, seller_id, seller:seller_id(id, name, email, instagram, telegram, reddit, linkedin, other_contact_details)`)
       .eq('id', productId)
       .single();
 
@@ -90,6 +90,7 @@ export const showInterest = async (req, res) => {
         telegram:  product.seller.telegram,
         reddit:    product.seller.reddit,
         linkedin:  product.seller.linkedin,
+        other_contact_details: product.seller.other_contact_details,
       },
       copy_message:   copyMessage,
       total_interest: totalInterest || 1,

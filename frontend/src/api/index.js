@@ -10,6 +10,7 @@
 // ============================================================
 
 import axios from 'axios';
+import { clearMarketplaceCache } from '../utils/marketplaceCache';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -24,7 +25,18 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const method = response.config.method?.toLowerCase();
+    const url = response.config.url || '';
+    const changesMarketplaceData =
+      ['post', 'put', 'patch', 'delete'].includes(method) &&
+      (url.startsWith('/api/products') ||
+        url.startsWith('/api/admin/products') ||
+        url.startsWith('/api/contact/'));
+
+    if (changesMarketplaceData) clearMarketplaceCache();
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');

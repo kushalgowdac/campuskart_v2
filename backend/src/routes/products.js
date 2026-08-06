@@ -5,6 +5,7 @@ import {
   getProductById,
   createProduct,
   updateProduct,
+  updateListingDetails,
   updateStatus,
   deleteProduct,
 } from '../controllers/productsController.js';
@@ -24,6 +25,7 @@ router.get('/:id', getProductById); // GET /api/products/:id
 // ── Protected routes ──
 router.post('/',             verifyToken, createProduct);   // POST /api/products
 router.put('/:id',           verifyToken, updateProduct);   // PUT /api/products/:id
+router.patch('/:id/details', verifyToken, updateListingDetails); // PATCH price/description
 router.patch('/:id/status',  verifyToken, updateStatus);    // PATCH /api/products/:id/status
 router.delete('/:id',        verifyToken, deleteProduct);   // DELETE /api/products/:id
 

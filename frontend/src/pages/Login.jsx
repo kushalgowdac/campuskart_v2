@@ -15,18 +15,14 @@ const Login = () => {
   const { isLoggedIn } = useAuth();
   const navigate       = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [error, setError]     = useState(() => sessionStorage.getItem('auth-error') || '');
 
   useEffect(() => {
     if (isLoggedIn) navigate('/', { replace: true });
   }, [isLoggedIn, navigate]);
 
   useEffect(() => {
-    const storedError = sessionStorage.getItem('auth-error');
-    if (storedError) {
-      setError(storedError);
-      sessionStorage.removeItem('auth-error');
-    }
+    sessionStorage.removeItem('auth-error');
   }, []);
 
   const handleGoogleLogin = async () => {

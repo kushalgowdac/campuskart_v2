@@ -1,5 +1,8 @@
 import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { productCardImage } from '../utils/cloudinaryImage';
+
+const PAGE_LOADED_AT = Date.now();
 
 // ── React.memo ────────────────────────────────────────────────
 // memo() wraps the component and tells React: "only re-render this
@@ -12,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 
 const ProductCard = memo(({ product }) => {
   const navigate = useNavigate();
+  const imageUrl = product.image_url || product.image_urls?.[0];
 
   const formatPrice = (price) =>
     new Intl.NumberFormat('en-IN', {
@@ -21,7 +25,7 @@ const ProductCard = memo(({ product }) => {
     }).format(price);
 
   const timeAgo = (dateStr) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    const diff = PAGE_LOADED_AT - new Date(dateStr).getTime();
     const days = Math.floor(diff / 86400000);
     if (days === 0) return 'Today';
     if (days === 1) return '1d ago';
@@ -80,9 +84,9 @@ const ProductCard = memo(({ product }) => {
       >
         {/* Image container — fixed aspect ratio via padding trick */}
         <div style={{ aspectRatio: '4/3', background: 'var(--color-bg-subtle)', overflow: 'hidden', position: 'relative' }}>
-          {product.image_urls?.[0] ? (
+          {imageUrl ? (
             <img
-              src={product.image_urls[0]}
+              src={productCardImage(imageUrl)}
               alt={product.title}
               className="product-card-img"
               loading="lazy"

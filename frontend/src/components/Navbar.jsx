@@ -22,7 +22,9 @@ const Navbar = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [mobileOpen, setMobileOpen]   = useState(false);
 
-  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
+  useEffect(() => {
+    Promise.resolve().then(() => setMobileOpen(false));
+  }, [location.pathname]);
 
   // ── Auto-close mobile menu on resize ────────────────────────
   // Without this, if the menu is open and the user maximizes the
@@ -45,7 +47,9 @@ const Navbar = () => {
       try {
         const res = await api.get('/api/notifications');
         setUnreadCount(res.data.unread_count || 0);
-      } catch {}
+      } catch {
+        // A notification badge failure must not affect navigation.
+      }
     };
     fetchUnread();
     const interval = setInterval(fetchUnread, 30000);
