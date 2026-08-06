@@ -171,6 +171,21 @@ the rollout.
 
 **Keep Supabase active:** The backend pings Supabase every 4 days to prevent free-tier automatic pausing. Set up [UptimeRobot](https://uptimerobot.com) to ping your Render backend every 5 minutes to prevent cold starts.
 
+### Google Search indexing
+
+The frontend includes canonical metadata, structured website data, `robots.txt`,
+and a root sitemap for `https://campuskart-v2.vercel.app`.
+
+After deploying the frontend:
+
+1. Add `https://campuskart-v2.vercel.app` as a URL-prefix property in Google Search Console.
+2. Choose the Search Console HTML-tag method and add its verification meta tag to `frontend/index.html`, then redeploy.
+3. Submit `https://campuskart-v2.vercel.app/sitemap.xml` under **Sitemaps**.
+4. Inspect `https://campuskart-v2.vercel.app/` and choose **Request indexing**.
+
+If the production domain changes, update the canonical URL, Open Graph URL,
+structured-data URL, `robots.txt`, and `sitemap.xml` together.
+
 ---
 
 ## Key Design Decisions
