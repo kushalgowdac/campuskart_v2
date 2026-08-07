@@ -145,6 +145,8 @@ After your first login, go to Supabase → Table Editor → users → find your 
 
 ---
 
+
+
 ## Deployment
 
 | Service | Platform | Notes |
@@ -153,7 +155,10 @@ After your first login, go to Supabase → Table Editor → users → find your 
 | Backend | Render | Free tier — set env vars in dashboard |
 | Database | Supabase | Free tier — keepalive ping prevents pause |
 
+
+
 ### Updating the live database
+
 
 Do **not** run `database/migration_v2.sql` against the live database. It is a
 clean-install migration and drops existing tables before recreating them.

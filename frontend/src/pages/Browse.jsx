@@ -154,8 +154,9 @@ const Browse = () => {
     Promise.resolve().then(() => fetchProducts());
   }, [fetchProducts]);
 
-  const handleSearchKeyDown = (e) => {
-    if (e.key === 'Enter') setAppliedSearch(searchInput.trim());
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    setAppliedSearch(searchInput.trim());
   };
 
   const clearSearch = () => {
@@ -167,10 +168,14 @@ const Browse = () => {
     <>
       <style>{`
         .filter-bar { position: sticky; top: 60px; z-index: 90; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--color-border); }
+        .filter-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .search-form { display: flex; flex: 1 1 320px; max-width: 520px; gap: 8px; }
+        .search-field { position: relative; flex: 1; min-width: 0; }
         .cat-chip { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--color-border); background: white; color: var(--color-text-secondary); cursor: pointer; font-size: 13px; font-weight: 500; font-family: var(--font-sans); transition: all 0.15s; white-space: nowrap; }
         .cat-chip:hover { border-color: var(--color-text-primary); color: var(--color-text-primary); }
         .cat-chip.active { background: var(--color-text-primary); border-color: var(--color-text-primary); color: white; }
-        .srch { width: 100%; padding: 10px 16px 10px 40px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 14px; font-family: var(--font-sans); outline: none; background: var(--color-bg-subtle); color: var(--color-text-primary); transition: border-color 0.15s, background 0.15s; }
+        .srch { width: 100%; padding: 10px 38px 10px 40px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 14px; font-family: var(--font-sans); outline: none; background: var(--color-bg-subtle); color: var(--color-text-primary); transition: border-color 0.15s, background 0.15s; }
+        .srch::-webkit-search-cancel-button { appearance: none; }
         .srch:focus { border-color: var(--color-text-primary); background: white; }
         .srch::placeholder { color: var(--color-text-muted); }
         .srt { padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 13px; font-family: var(--font-sans); background: white; color: var(--color-text-secondary); cursor: pointer; outline: none; }
@@ -193,6 +198,9 @@ const Browse = () => {
         .marketplace-guide-footer p { margin: 0; max-width: 330px; color: var(--color-text-muted); font-size: 12px; line-height: 1.5; }
         @keyframes guide-enter { from { opacity: 0; transform: translateY(8px) scale(0.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @media (max-width: 600px) {
+          .filter-controls { align-items: stretch; }
+          .search-form { flex-basis: 100%; max-width: none; }
+          .search-submit { min-width: 78px; }
           .marketplace-guide-backdrop { padding: 12px; align-items: end; }
           .marketplace-guide { max-height: calc(100vh - 24px); padding: 22px 18px; border-radius: var(--radius-lg); }
           .marketplace-guide-sections { grid-template-columns: 1fr; }
@@ -208,18 +216,21 @@ const Browse = () => {
       {/* No hero banner. Filter bar sticks below navbar, products visible immediately. */}
       <div className="filter-bar">
         <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '12px 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 240px', maxWidth: '420px', position: 'relative' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }}>
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-              <input className="srch" placeholder="Search products… press Enter" value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyDown={handleSearchKeyDown} aria-label="Search products" />
-              {searchInput && (
-                <button onClick={clearSearch} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', padding: '2px' }} aria-label="Clear search">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-              )}
-            </div>
+          <div className="filter-controls">
+            <form className="search-form" role="search" onSubmit={handleSearchSubmit}>
+              <div className="search-field">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }}>
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="search" enterKeyHint="search" className="srch" placeholder="Search products…" value={searchInput} onChange={e => setSearchInput(e.target.value)} aria-label="Search products" />
+                {searchInput && (
+                  <button type="button" onClick={clearSearch} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', padding: '4px' }} aria-label="Clear search">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                )}
+              </div>
+              <button type="submit" className="btn-primary search-submit" style={{ padding: '9px 14px', fontSize: '13px' }}>Search</button>
+            </form>
             <select className="srt" value={sort} onChange={e => setSort(e.target.value)}>
               <option value="">Newest</option>
               <option value="price_asc">Price ↑</option>
