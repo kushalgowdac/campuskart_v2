@@ -154,9 +154,28 @@ const Browse = () => {
     Promise.resolve().then(() => fetchProducts());
   }, [fetchProducts]);
 
+  // Mobile keyboards do not consistently submit forms from their arrow/Go key.
+  // Apply the query after a short pause as a reliable fallback on every device.
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setAppliedSearch(searchInput.trim());
+    }, 400);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchInput]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setAppliedSearch(searchInput.trim());
+    e.currentTarget.querySelector('input')?.blur();
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key !== 'Enter' && e.keyCode !== 13) return;
+
+    e.preventDefault();
+    setAppliedSearch(searchInput.trim());
+    e.currentTarget.blur();
   };
 
   const clearSearch = () => {
@@ -222,7 +241,7 @@ const Browse = () => {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }}>
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-                <input type="search" enterKeyHint="search" className="srch" placeholder="Search products…" value={searchInput} onChange={e => setSearchInput(e.target.value)} aria-label="Search products" />
+                <input type="search" enterKeyHint="search" className="srch" placeholder="Search products…" value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyDown={handleSearchKeyDown} aria-label="Search products" />
                 {searchInput && (
                   <button type="button" onClick={clearSearch} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', padding: '4px' }} aria-label="Clear search">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
