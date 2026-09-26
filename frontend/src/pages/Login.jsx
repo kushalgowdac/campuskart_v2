@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, supabase } from '../context/AuthContext';
+import MarketplaceGuideModal from '../components/MarketplaceGuideModal';
 
 // ── Why this login page looks different from a typical form ──
 // Most login pages show email + password fields because most apps
@@ -16,6 +17,7 @@ const Login = () => {
   const navigate       = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(() => sessionStorage.getItem('auth-error') || '');
+  const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
     if (isLoggedIn) navigate('/', { replace: true });
@@ -25,11 +27,15 @@ const Login = () => {
     sessionStorage.removeItem('auth-error');
   }, []);
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = () => {
+    setError('');
+    setShowGuide(true);
+  };
+
+  const continueToGoogle = async () => {
+    setShowGuide(false);
     setLoading(true);
     setError('');
-    // Survives the OAuth redirect and is cleared when the guide is acknowledged.
-    sessionStorage.setItem('show-marketplace-guide', 'true');
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -37,15 +43,22 @@ const Login = () => {
       });
       if (error) throw error;
     } catch (err) {
-      sessionStorage.removeItem('show-marketplace-guide');
       setError(err.message || 'Failed to start Google login.');
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--color-bg-primary)', padding: '1.5rem' }}>
-      <div style={{ width: '100%', maxWidth: '360px' }}>
+    <>
+      {showGuide && (
+        <MarketplaceGuideModal
+          onAcknowledge={continueToGoogle}
+          actionLabel="Got it, continue to sign in"
+        />
+      )}
+
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--color-bg-primary)', padding: '1.5rem' }}>
+        <div style={{ width: '100%', maxWidth: '360px' }}>
 
         {/* Wordmark */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
@@ -122,8 +135,9 @@ const Login = () => {
         <p style={{ textAlign: 'center', fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '20px' }}>
           By signing in you agree to use this platform responsibly.
         </p>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

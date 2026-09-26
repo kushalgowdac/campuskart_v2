@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-const MarketplaceGuideModal = ({ onAcknowledge }) => {
+const MarketplaceGuideModal = ({ onAcknowledge, actionLabel = 'Got it, start browsing' }) => {
   const acknowledgeButtonRef = useRef(null);
 
   useEffect(() => {
@@ -68,7 +68,7 @@ const MarketplaceGuideModal = ({ onAcknowledge }) => {
         <div className="marketplace-guide-footer">
           <p>Keep conversations respectful and meet in a safe place on campus.</p>
           <button ref={acknowledgeButtonRef} type="button" className="btn-primary" onClick={onAcknowledge}>
-            Got it, start browsing
+            {actionLabel}
           </button>
         </div>
       </section>

@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
 import ProductCard from '../components/ProductCard';
-import MarketplaceGuideModal from '../components/MarketplaceGuideModal';
-import { useAuth } from '../context/AuthContext';
 import {
   PRODUCT_LIST_CACHE_TTL,
   productListCacheKey,
@@ -31,7 +29,6 @@ const SkeletonCard = () => (
 );
 
 const Browse = () => {
-  const { isLoggedIn } = useAuth();
   const [products, setProducts]           = useState([]);
   const [loading, setLoading]             = useState(true);
   const [refreshing, setRefreshing]       = useState(false);
@@ -43,15 +40,7 @@ const Browse = () => {
   const [appliedSearch, setAppliedSearch] = useState('');
   const [category, setCategory]           = useState('All');
   const [sort, setSort]                   = useState('');
-  const [showGuide, setShowGuide]         = useState(
-    () => sessionStorage.getItem('show-marketplace-guide') === 'true'
-  );
   const requestIdRef = useRef(0);
-
-  const acknowledgeGuide = () => {
-    sessionStorage.removeItem('show-marketplace-guide');
-    setShowGuide(false);
-  };
 
   // useCallback: memoize this function so it has a stable reference
   // across renders, unless appliedSearch/category/sort actually change.
@@ -198,39 +187,12 @@ const Browse = () => {
         .srch:focus { border-color: var(--color-text-primary); background: white; }
         .srch::placeholder { color: var(--color-text-muted); }
         .srt { padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 13px; font-family: var(--font-sans); background: white; color: var(--color-text-secondary); cursor: pointer; outline: none; }
-        .marketplace-guide-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(10,10,10,0.58); backdrop-filter: blur(3px); }
-        .marketplace-guide { width: min(680px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; background: white; border: 1px solid var(--color-border); border-radius: var(--radius-xl); box-shadow: 0 24px 64px rgba(0,0,0,0.2); padding: 28px; animation: guide-enter 0.2s ease-out; }
-        .marketplace-guide-heading { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 24px; }
-        .marketplace-guide-icon { width: 38px; height: 38px; flex: 0 0 38px; display: grid; place-items: center; color: var(--color-text-primary); background: var(--color-bg-hover); border-radius: 50%; }
-        .marketplace-guide-heading h2 { margin: 0 0 4px; font-size: 21px; line-height: 1.3; letter-spacing: -0.02em; }
-        .marketplace-guide-heading p { margin: 0; color: var(--color-text-secondary); font-size: 14px; }
-        .marketplace-guide-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-        .marketplace-guide-section { padding: 20px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-subtle); }
-        .marketplace-guide-section-title { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
-        .marketplace-guide-section-title h3 { margin: 0; font-size: 15px; }
-        .marketplace-guide-number { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--color-text-primary); color: white; font-size: 12px; font-weight: 700; }
-        .marketplace-guide-section ul { margin: 0; padding-left: 18px; color: var(--color-text-secondary); font-size: 13px; line-height: 1.55; }
-        .marketplace-guide-section li + li { margin-top: 9px; }
-        .marketplace-guide-section strong { color: var(--color-text-primary); font-weight: 600; }
-        .marketplace-guide-seller-note { margin-top: 14px; padding: 11px 12px; border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); background: white; color: var(--color-text-primary); font-size: 13px; font-weight: 650; line-height: 1.5; }
-        .marketplace-guide-footer { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-top: 22px; }
-        .marketplace-guide-footer p { margin: 0; max-width: 330px; color: var(--color-text-muted); font-size: 12px; line-height: 1.5; }
-        @keyframes guide-enter { from { opacity: 0; transform: translateY(8px) scale(0.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @media (max-width: 600px) {
           .filter-controls { align-items: stretch; }
           .search-form { flex-basis: 100%; max-width: none; }
           .search-submit { min-width: 78px; }
-          .marketplace-guide-backdrop { padding: 12px; align-items: end; }
-          .marketplace-guide { max-height: calc(100vh - 24px); padding: 22px 18px; border-radius: var(--radius-lg); }
-          .marketplace-guide-sections { grid-template-columns: 1fr; }
-          .marketplace-guide-footer { align-items: stretch; flex-direction: column; gap: 14px; }
-          .marketplace-guide-footer p { max-width: none; }
-          .marketplace-guide-footer .btn-primary { width: 100%; }
         }
-        @media (prefers-reduced-motion: reduce) { .marketplace-guide { animation: none; } }
       `}</style>
-
-      {isLoggedIn && showGuide && <MarketplaceGuideModal onAcknowledge={acknowledgeGuide} />}
 
       {/* No hero banner. Filter bar sticks below navbar, products visible immediately. */}
       <div className="filter-bar">
