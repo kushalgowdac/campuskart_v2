@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { BUYER_STEPS, SELLER_STEPS } from '../content/marketplaceGuide';
 
 const MarketplaceGuideModal = ({ onAcknowledge, actionLabel = 'Got it, start browsing' }) => {
   const acknowledgeButtonRef = useRef(null);
@@ -43,9 +44,7 @@ const MarketplaceGuideModal = ({ onAcknowledge, actionLabel = 'Got it, start bro
               <h3>For buyers</h3>
             </div>
             <ul>
-              <li>Browse, search, and filter listings to find what you need.</li>
-              <li>Open a listing and click <strong>“I’m Interested”</strong> to get the seller’s contact information.</li>
-              <li>Continue the conversation outside CampusKart using email, Instagram, Telegram, Reddit, or LinkedIn.</li>
+              {BUYER_STEPS.map(step => <li key={step}>{step}</li>)}
             </ul>
           </div>
 
@@ -55,9 +54,7 @@ const MarketplaceGuideModal = ({ onAcknowledge, actionLabel = 'Got it, start bro
               <h3>For sellers</h3>
             </div>
             <ul>
-              <li>Create a listing with clear photos. It will go live after admin approval.</li>
-              <li>Manage your listings from the dashboard and mark items as sold or hidden.</li>
-              <li>Sold items move to Closed deals. Every listing is removed 90 days after it was posted.</li>
+              {SELLER_STEPS.map(step => <li key={step}>{step}</li>)}
             </ul>
             <div className="marketplace-guide-seller-note">
               You can edit your price and description later from My Listings, even after the item is placed for sale. Edits are sent for review again.

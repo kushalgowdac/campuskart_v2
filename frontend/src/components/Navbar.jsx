@@ -105,6 +105,7 @@ const Navbar = () => {
           {/* Desktop nav — hidden below 640px via CSS class */}
           <div className="desktop-links">
             <Link to="/" className={linkClass('/')}>Browse</Link>
+            <Link to="/guide" className={linkClass('/guide')}>Guide</Link>
             {isLoggedIn && (
               <>
                 <Link to="/sell"      className={linkClass('/sell')}>Sell</Link>
@@ -156,6 +157,7 @@ const Navbar = () => {
       {mobileOpen && (
         <div style={styles.mobileMenu}>
           <Link to="/" style={mobileLinkClass('/')}>Browse</Link>
+          <Link to="/guide" style={mobileLinkClass('/guide')}>Guide</Link>
           {isLoggedIn && (
             <>
               <Link to="/sell"          style={mobileLinkClass('/sell')}>Sell</Link>

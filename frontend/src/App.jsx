@@ -7,6 +7,7 @@ import Navbar from './components/Navbar';
 import Browse from './pages/Browse';
 
 const Login = lazy(() => import('./pages/Login'));
+const Guide = lazy(() => import('./pages/Guide'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const ClosedDeals = lazy(() => import('./pages/ClosedDeals'));
 const ContactSeller = lazy(() => import('./pages/ContactSeller'));
@@ -42,6 +43,7 @@ function App() {
             <Routes>
             {/* Public */}
             <Route path="/" element={<Browse />} />
+            <Route path="/guide" element={<Guide />} />
             <Route path="/login" element={<Login />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/closed-deals" element={<ClosedDeals />} />
