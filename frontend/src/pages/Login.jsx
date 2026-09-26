@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, supabase } from '../context/AuthContext';
-import MarketplaceGuideModal from '../components/MarketplaceGuideModal';
 
 // ── Why this login page looks different from a typical form ──
 // Most login pages show email + password fields because most apps
@@ -17,7 +16,6 @@ const Login = () => {
   const navigate       = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(() => sessionStorage.getItem('auth-error') || '');
-  const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
     if (isLoggedIn) navigate('/', { replace: true });
@@ -27,13 +25,7 @@ const Login = () => {
     sessionStorage.removeItem('auth-error');
   }, []);
 
-  const handleGoogleLogin = () => {
-    setError('');
-    setShowGuide(true);
-  };
-
-  const continueToGoogle = async () => {
-    setShowGuide(false);
+  const handleGoogleLogin = async () => {
     setLoading(true);
     setError('');
     try {
@@ -50,13 +42,6 @@ const Login = () => {
 
   return (
     <>
-      {showGuide && (
-        <MarketplaceGuideModal
-          onAcknowledge={continueToGoogle}
-          actionLabel="Got it, continue to sign in"
-        />
-      )}
-
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--color-bg-primary)', padding: '1.5rem' }}>
         <div style={{ width: '100%', maxWidth: '360px' }}>
 

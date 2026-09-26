@@ -1,9 +1,10 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth, supabase } from './context/AuthContext';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
+import MarketplaceGuideModal from './components/MarketplaceGuideModal';
 import Browse from './pages/Browse';
 
 const Login = lazy(() => import('./pages/Login'));
@@ -26,6 +27,40 @@ const RouteFallback = () => (
   </div>
 );
 
+const ENTRY_GUIDE_SEEN_KEY = 'campuskart-entry-guide-seen';
+
+const SiteEntryGuide = () => {
+  const { isLoggedIn } = useAuth();
+  const [showGuide, setShowGuide] = useState(
+    () => !sessionStorage.getItem(ENTRY_GUIDE_SEEN_KEY)
+  );
+
+  if (isLoggedIn || !showGuide) return null;
+
+  const signInWithGoogle = async () => {
+    sessionStorage.setItem(ENTRY_GUIDE_SEEN_KEY, 'true');
+    setShowGuide(false);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin, scopes: 'email profile' },
+      });
+      if (error) throw error;
+    } catch (error) {
+      sessionStorage.setItem('auth-error', error.message || 'Failed to start Google login.');
+      window.location.href = '/login';
+    }
+  };
+
+  return (
+    <MarketplaceGuideModal
+      onAcknowledge={signInWithGoogle}
+      actionLabel="Sign in with Google"
+    />
+  );
+};
+
 // ── Why ErrorBoundary wraps everything here ────────────────
 // Placing it ONCE at the top level (inside BrowserRouter, outside Routes)
 // means ANY page that throws a render error gets caught by this single
@@ -38,6 +73,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <ErrorBoundary>
+          <SiteEntryGuide />
           <Navbar />
           <Suspense fallback={<RouteFallback />}>
             <Routes>
