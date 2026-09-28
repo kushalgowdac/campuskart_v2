@@ -3,16 +3,56 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../context/AuthContext';
 import { BUYER_STEPS, SELLER_STEPS } from '../content/marketplaceGuide';
 
+const SignalGraphic = () => {
+  const curves = [46, 72, 98, 124, 150, 176, 202];
+
+  return (
+    <svg className="welcome-signal" viewBox="0 0 700 430" role="img" aria-label="Flowing lines connecting the campus marketplace">
+      <defs>
+        <linearGradient id="signal-line" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#133252" stopOpacity="0.28" />
+          <stop offset="0.48" stopColor="#61b8ff" stopOpacity="0.9" />
+          <stop offset="1" stopColor="#8fd0ff" />
+        </linearGradient>
+        <radialGradient id="signal-glow">
+          <stop offset="0" stopColor="#55b5ff" stopOpacity="0.25" />
+          <stop offset="1" stopColor="#55b5ff" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <circle cx="354" cy="215" r="130" fill="url(#signal-glow)" />
+      {curves.map((spread, index) => (
+        <path
+          key={spread}
+          d={`M 0 ${215 - spread / 2} C 150 ${215 - spread}, 205 ${215 + spread}, 350 215 C 470 ${215 - spread}, 560 ${215 - spread / 1.4}, 700 ${215 - spread / 2}`}
+          fill="none"
+          stroke="url(#signal-line)"
+          strokeWidth={index === curves.length - 1 ? 2.1 : 1.6}
+        />
+      ))}
+      {curves.map((spread, index) => (
+        <path
+          key={`lower-${spread}`}
+          d={`M 0 ${215 + spread / 2} C 150 ${215 + spread}, 205 ${215 - spread}, 350 215 C 470 ${215 + spread}, 560 ${215 + spread / 1.4}, 700 ${215 + spread / 2}`}
+          fill="none"
+          stroke="url(#signal-line)"
+          strokeWidth={index === curves.length - 1 ? 2.1 : 1.6}
+        />
+      ))}
+      <path d="M0 215 H700" stroke="#73c3ff" strokeWidth="1.8" opacity="0.9" />
+    </svg>
+  );
+};
+
 const GuidanceCard = ({ label, title, steps }) => (
-  <article className="welcome-guide-card">
-    <div className="welcome-guide-title">
+  <article className="landing-guide-card">
+    <div className="landing-guide-title">
       <span aria-hidden="true">{label}</span>
-      <h2>{title}</h2>
+      <h3>{title}</h3>
     </div>
     <ol>
       {steps.map((step, index) => (
         <li key={step}>
-          <span aria-hidden="true">{index + 1}</span>
+          <span aria-hidden="true">0{index + 1}</span>
           <p>{step}</p>
         </li>
       ))}
@@ -41,71 +81,143 @@ const Welcome = () => {
   };
 
   return (
-    <main className="welcome-page">
+    <div className="landing-shell">
       <style>{`
-        .welcome-page { max-width: 1000px; margin: 0 auto; padding: 72px 24px 88px; }
-        .welcome-hero { max-width: 720px; margin-bottom: 52px; }
-        .welcome-eyebrow { display: inline-block; margin-bottom: 14px; color: var(--color-text-secondary); font-size: 12px; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; }
-        .welcome-hero h1 { max-width: 680px; margin: 0 0 18px; font-size: clamp(38px, 7vw, 64px); line-height: 1.02; letter-spacing: -0.055em; }
-        .welcome-hero > p { max-width: 620px; margin: 0; color: var(--color-text-secondary); font-size: 17px; line-height: 1.7; }
-        .welcome-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
-        .welcome-actions a { text-decoration: none; }
-        .welcome-access-note { margin-top: 14px; color: var(--color-text-muted); font-size: 12px; line-height: 1.5; }
-        .welcome-access-note strong { color: var(--color-text-secondary); }
-        .welcome-error { max-width: 520px; margin-top: 14px; padding: 10px 12px; border: 1px solid #fecaca; border-radius: var(--radius-sm); background: var(--color-danger-subtle); color: var(--color-danger); font-size: 13px; }
-        .welcome-guide-heading { margin-bottom: 18px; }
-        .welcome-guide-heading h2 { margin: 0 0 6px; font-size: 25px; letter-spacing: -0.03em; }
-        .welcome-guide-heading p { margin: 0; color: var(--color-text-secondary); font-size: 14px; }
-        .welcome-guide-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-        .welcome-guide-card { padding: 24px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-bg-subtle); }
-        .welcome-guide-title { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-        .welcome-guide-title > span { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--color-text-primary); color: white; font-size: 12px; font-weight: 700; }
-        .welcome-guide-title h2 { margin: 0; font-size: 18px; }
-        .welcome-guide-card ol { display: grid; gap: 15px; margin: 0; padding: 0; list-style: none; }
-        .welcome-guide-card li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; align-items: start; }
-        .welcome-guide-card li > span { width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid var(--color-border-strong); border-radius: 50%; background: white; color: var(--color-text-secondary); font-size: 11px; font-weight: 700; }
-        .welcome-guide-card li p { margin: 1px 0 0; color: var(--color-text-secondary); font-size: 13px; line-height: 1.6; }
-        .welcome-safety { margin-top: 16px; padding: 14px 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text-secondary); font-size: 13px; line-height: 1.55; }
-        .welcome-safety strong { color: var(--color-text-primary); }
-        @media (max-width: 680px) {
-          .welcome-page { padding: 48px 16px 64px; }
-          .welcome-hero { margin-bottom: 42px; }
-          .welcome-guide-grid { grid-template-columns: 1fr; }
-          .welcome-actions { flex-direction: column; }
-          .welcome-actions .btn-primary, .welcome-actions .btn-secondary { width: 100%; justify-content: center; }
+        .landing-shell {
+          --landing-bg: #030914;
+          --landing-panel: #081321;
+          --landing-line: #1c3852;
+          --landing-blue: #78c6ff;
+          min-height: 100vh;
+          overflow: hidden;
+          background: var(--landing-bg);
+          color: #eff8ff;
+        }
+        .landing-nav { width: min(1320px, calc(100% - 48px)); height: 72px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(120,198,255,0.18); }
+        .landing-brand { display: flex; align-items: center; gap: 10px; color: #eff8ff; text-decoration: none; font-size: 19px; font-weight: 700; letter-spacing: -0.03em; }
+        .landing-brand-mark { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; background: var(--landing-blue); color: #03101d; font-size: 15px; font-weight: 800; }
+        .landing-nav-links { display: flex; align-items: center; gap: 30px; }
+        .landing-nav-links a { color: #b9d0e3; text-decoration: none; font-size: 13px; transition: color 0.15s; }
+        .landing-nav-links a:hover { color: white; }
+        .landing-nav-actions { display: flex; gap: 10px; }
+        .landing-button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 19px; border: 1px solid #294863; border-radius: 7px; font-family: var(--font-sans); font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; transition: transform 0.15s, background 0.15s, border-color 0.15s; }
+        .landing-button:hover { transform: translateY(-1px); }
+        .landing-button-primary { border-color: #d9efff; background: #d9efff; color: #06111d; }
+        .landing-button-primary:hover { background: white; border-color: white; }
+        .landing-button-primary:disabled { opacity: 0.65; cursor: wait; transform: none; }
+        .landing-button-secondary { background: transparent; color: #d7eafa; }
+        .landing-button-secondary:hover { border-color: #78c6ff; background: rgba(120,198,255,0.07); }
+        .landing-hero { width: min(1320px, calc(100% - 48px)); min-height: 650px; margin: 0 auto; display: grid; grid-template-columns: minmax(420px, 0.9fr) minmax(520px, 1.2fr); align-items: center; gap: 10px; }
+        .landing-copy { position: relative; z-index: 2; padding: 72px 0 92px; }
+        .landing-kicker { display: inline-flex; align-items: center; gap: 9px; margin-bottom: 24px; color: var(--landing-blue); font-size: 12px; font-weight: 650; letter-spacing: 0.09em; text-transform: uppercase; }
+        .landing-kicker::before { content: ''; width: 28px; height: 1px; background: currentColor; }
+        .landing-copy h1 { max-width: 650px; margin: 0; color: var(--landing-blue); font-size: clamp(52px, 6.4vw, 92px); font-weight: 450; line-height: 0.98; letter-spacing: -0.065em; }
+        .landing-copy > p { max-width: 580px; margin: 30px 0 0; color: #bdd2e3; font-size: 17px; line-height: 1.65; }
+        .landing-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+        .landing-access { margin-top: 15px; color: #7892a8; font-size: 12px; line-height: 1.5; }
+        .landing-access strong { color: #abc4d7; }
+        .landing-error { max-width: 550px; margin-top: 14px; padding: 10px 12px; border: 1px solid #7f3540; border-radius: 6px; background: rgba(127,53,64,0.16); color: #ffb7c0; font-size: 13px; }
+        .landing-art { position: relative; width: 110%; margin-left: -8%; }
+        .welcome-signal { display: block; width: 100%; height: auto; filter: drop-shadow(0 0 22px rgba(72,169,240,0.08)); }
+        .landing-guide { border-top: 1px solid rgba(120,198,255,0.15); background: linear-gradient(180deg, rgba(8,19,33,0.35), rgba(8,19,33,0.75)); }
+        .landing-guide-inner { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 90px 0 96px; }
+        .landing-section-heading { max-width: 650px; margin-bottom: 38px; }
+        .landing-section-heading span { color: var(--landing-blue); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+        .landing-section-heading h2 { margin: 12px 0 10px; color: #eff8ff; font-size: clamp(30px, 4vw, 46px); font-weight: 500; letter-spacing: -0.045em; }
+        .landing-section-heading p { margin: 0; color: #8fa9bd; font-size: 15px; line-height: 1.6; }
+        .landing-guide-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+        .landing-guide-card { padding: 28px; border: 1px solid var(--landing-line); border-radius: 10px; background: rgba(3,9,20,0.55); }
+        .landing-guide-title { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .landing-guide-title > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 7px; background: var(--landing-blue); color: #06111d; font-size: 13px; font-weight: 800; }
+        .landing-guide-title h3 { margin: 0; color: #eff8ff; font-size: 18px; }
+        .landing-guide-card ol { display: grid; gap: 18px; margin: 0; padding: 0; list-style: none; }
+        .landing-guide-card li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: start; }
+        .landing-guide-card li > span { padding-top: 2px; color: #5596c7; font-size: 11px; font-weight: 700; }
+        .landing-guide-card li p { margin: 0; color: #9ab1c3; font-size: 13px; line-height: 1.6; }
+        .landing-safety { margin-top: 18px; padding: 15px 18px; border: 1px solid var(--landing-line); border-radius: 8px; color: #8fa9bd; font-size: 13px; line-height: 1.55; }
+        .landing-safety strong { color: #d6e8f5; }
+        @media (max-width: 900px) {
+          .landing-nav-links { display: none; }
+          .landing-hero { min-height: auto; grid-template-columns: 1fr; padding-bottom: 50px; }
+          .landing-copy { padding: 76px 0 20px; }
+          .landing-copy h1 { max-width: 760px; }
+          .landing-art { width: 105%; max-width: 760px; margin: -15px auto 0; }
+        }
+        @media (max-width: 620px) {
+          .landing-nav { width: calc(100% - 32px); height: 64px; }
+          .landing-nav-actions .landing-button-secondary { display: none; }
+          .landing-nav-actions .landing-button { min-height: 38px; padding: 0 13px; font-size: 12px; }
+          .landing-hero { width: calc(100% - 32px); }
+          .landing-copy { padding-top: 58px; }
+          .landing-copy h1 { font-size: clamp(44px, 15vw, 65px); }
+          .landing-copy > p { margin-top: 22px; font-size: 15px; }
+          .landing-hero-actions { flex-direction: column; }
+          .landing-hero-actions .landing-button { width: 100%; }
+          .landing-art { width: 125%; margin-left: -12%; }
+          .landing-guide-inner { width: calc(100% - 32px); padding: 68px 0 72px; }
+          .landing-guide-grid { grid-template-columns: 1fr; }
         }
       `}</style>
 
-      <header className="welcome-hero">
-        <span className="welcome-eyebrow">RVCE student marketplace</span>
-        <h1>Welcome to CampusKart.</h1>
-        <p>Discover useful items from the campus community or give something you no longer need a second life.</p>
-        <div className="welcome-actions">
-          <Link to="/browse" className="btn-secondary">Browse listings without signing in</Link>
-          <button type="button" className="btn-primary" onClick={signInWithGoogle} disabled={loading}>
-            {loading ? 'Redirecting to Google…' : 'Sign in with RVCE Google'}
+      <header className="landing-nav">
+        <a className="landing-brand" href="#top" aria-label="CampusKart home">
+          <span className="landing-brand-mark">CK</span>
+          CampusKart
+        </a>
+        <nav className="landing-nav-links" aria-label="Welcome page navigation">
+          <a href="#how-it-works">How it works</a>
+          <Link to="/guide">Guide</Link>
+          <Link to="/browse">Browse items</Link>
+        </nav>
+        <div className="landing-nav-actions">
+          <Link className="landing-button landing-button-secondary" to="/browse">Browse items</Link>
+          <button className="landing-button landing-button-primary" type="button" onClick={signInWithGoogle} disabled={loading}>
+            {loading ? 'Redirecting…' : 'Sign in'}
           </button>
         </div>
-        <p className="welcome-access-note">
-          <strong>Anyone can browse listings.</strong> Signing in is only for RVCE students with an @rvce.edu.in Google account.
-        </p>
-        {error && <div className="welcome-error" role="alert">{error}</div>}
       </header>
 
-      <section aria-labelledby="welcome-guide-title">
-        <div className="welcome-guide-heading">
-          <h2 id="welcome-guide-title">How CampusKart works</h2>
-          <p>A quick guide before you start buying or selling.</p>
-        </div>
-        <div className="welcome-guide-grid">
-          <GuidanceCard label="B" title="For buyers" steps={BUYER_STEPS} />
-          <GuidanceCard label="S" title="For sellers" steps={SELLER_STEPS} />
-        </div>
-        <div className="welcome-safety">
-          <strong>Stay safe:</strong> inspect items before paying and meet in a public place on campus.
-        </div>
-      </section>
-    </main>
+      <main id="top">
+        <section className="landing-hero">
+          <div className="landing-copy">
+            <span className="landing-kicker">Built for the RVCE community</span>
+            <h1>Campus finds, without the clutter.</h1>
+            <p>Discover useful items, connect directly with fellow students, and give pre-owned products a second life—all within your campus community.</p>
+            <div className="landing-hero-actions">
+              <button className="landing-button landing-button-primary" type="button" onClick={signInWithGoogle} disabled={loading}>
+                {loading ? 'Redirecting to Google…' : 'Sign in / Sign up with Google'}
+              </button>
+              <Link className="landing-button landing-button-secondary" to="/browse">Browse items</Link>
+            </div>
+            <div className="landing-access">
+              <strong>Google sign-in is limited to @rvce.edu.in accounts.</strong><br />
+              No account is needed to browse public listings.
+            </div>
+            {error && <div className="landing-error" role="alert">{error}</div>}
+          </div>
+          <div className="landing-art" aria-hidden="true">
+            <SignalGraphic />
+          </div>
+        </section>
+
+        <section className="landing-guide" id="how-it-works">
+          <div className="landing-guide-inner">
+            <div className="landing-section-heading">
+              <span>Simple by design</span>
+              <h2>From listing to handover.</h2>
+              <p>CampusKart helps buyers and sellers connect directly. Payments and handovers stay between students.</p>
+            </div>
+            <div className="landing-guide-grid">
+              <GuidanceCard label="B" title="For buyers" steps={BUYER_STEPS} />
+              <GuidanceCard label="S" title="For sellers" steps={SELLER_STEPS} />
+            </div>
+            <div className="landing-safety">
+              <strong>Meet safely:</strong> inspect items before paying and choose a public place on campus for every handover.
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 };
 

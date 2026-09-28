@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -32,6 +32,14 @@ const Home = () => {
   return isLoggedIn ? <Browse /> : <Welcome />;
 };
 
+const SiteNavbar = () => {
+  const { isLoggedIn } = useAuth();
+  const { pathname } = useLocation();
+
+  if (!isLoggedIn && pathname === '/') return null;
+  return <Navbar />;
+};
+
 // ── Why ErrorBoundary wraps everything here ────────────────
 // Placing it ONCE at the top level (inside BrowserRouter, outside Routes)
 // means ANY page that throws a render error gets caught by this single
@@ -44,7 +52,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <ErrorBoundary>
-          <Navbar />
+          <SiteNavbar />
           <Suspense fallback={<RouteFallback />}>
             <Routes>
             {/* Public */}
