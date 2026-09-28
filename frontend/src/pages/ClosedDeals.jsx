@@ -57,7 +57,7 @@ const ClosedDeals = () => {
             Items marked as sold stay here until 90 days after their original listing date.
           </p>
         </div>
-        <Link to="/" className="btn-secondary">Back to listings</Link>
+        <Link to="/browse" className="btn-secondary">Back to listings</Link>
       </div>
 
       {error && <div style={{ padding: '14px', marginBottom: '20px', borderRadius: 'var(--radius-md)', background: 'var(--color-danger-subtle)', color: 'var(--color-danger)' }}>{error}</div>}

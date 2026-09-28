@@ -1,11 +1,11 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider, useAuth, supabase } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
-import MarketplaceGuideModal from './components/MarketplaceGuideModal';
 import Browse from './pages/Browse';
+import Welcome from './pages/Welcome';
 
 const Login = lazy(() => import('./pages/Login'));
 const Guide = lazy(() => import('./pages/Guide'));
@@ -27,44 +27,9 @@ const RouteFallback = () => (
   </div>
 );
 
-const WELCOME_SEEN_KEY = 'campuskart-welcome-seen-v2';
-
-const SiteEntryGuide = () => {
+const Home = () => {
   const { isLoggedIn } = useAuth();
-  const [showGuide, setShowGuide] = useState(
-    () => !sessionStorage.getItem(WELCOME_SEEN_KEY)
-  );
-
-  if (isLoggedIn || !showGuide) return null;
-
-  const continueBrowsing = () => {
-    sessionStorage.setItem(WELCOME_SEEN_KEY, 'true');
-    setShowGuide(false);
-  };
-
-  const signInWithGoogle = async () => {
-    sessionStorage.setItem(WELCOME_SEEN_KEY, 'true');
-    setShowGuide(false);
-
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: window.location.origin, scopes: 'email profile' },
-      });
-      if (error) throw error;
-    } catch (error) {
-      sessionStorage.setItem('auth-error', error.message || 'Failed to start Google login.');
-      window.location.href = '/login';
-    }
-  };
-
-  return (
-    <MarketplaceGuideModal
-      onAcknowledge={signInWithGoogle}
-      onBrowse={continueBrowsing}
-      actionLabel="Sign in with RVCE Google"
-    />
-  );
+  return isLoggedIn ? <Browse /> : <Welcome />;
 };
 
 // ── Why ErrorBoundary wraps everything here ────────────────
@@ -79,12 +44,12 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <ErrorBoundary>
-          <SiteEntryGuide />
           <Navbar />
           <Suspense fallback={<RouteFallback />}>
             <Routes>
             {/* Public */}
-            <Route path="/" element={<Browse />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/browse" element={<Browse />} />
             <Route path="/guide" element={<Guide />} />
             <Route path="/login" element={<Login />} />
             <Route path="/product/:id" element={<ProductDetail />} />

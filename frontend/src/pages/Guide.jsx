@@ -108,7 +108,7 @@ const Guide = () => {
           <p>Browse what other RVCE students have listed.</p>
         </div>
         <div className="guide-cta-actions">
-          <Link to="/" className="btn-primary guide-light-button">Browse listings</Link>
+          <Link to="/browse" className="btn-primary guide-light-button">Browse listings</Link>
           <Link to={isLoggedIn ? '/sell' : '/login'} className="btn-secondary guide-outline-button">
             {isLoggedIn ? 'List an item' : 'Sign in'}
           </Link>
