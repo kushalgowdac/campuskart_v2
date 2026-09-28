@@ -86,7 +86,7 @@ const Setup = () => {
           </div>
 
           {error && (
-            <div style={{ padding: '10px 12px', background: 'var(--color-danger-subtle)', border: '1px solid #fecaca', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-danger)' }}>
+            <div style={{ padding: '10px 12px', background: 'var(--color-danger-subtle)', border: '1px solid #70313c', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-danger)' }}>
               {error}
             </div>
           )}

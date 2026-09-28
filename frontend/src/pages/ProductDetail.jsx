@@ -201,9 +201,9 @@ const ProductDetail = () => {
             )}
 
             {isOwn && (
-              <div style={{ padding: '12px 14px', background: 'var(--color-accent-subtle)', border: '1px solid #6ee7b7', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: '#065f46', textAlign: 'center' }}>
+              <div style={{ padding: '12px 14px', background: 'var(--color-success-subtle)', border: '1px solid #285f48', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-success)', textAlign: 'center' }}>
                 This is your listing.{' '}
-                <a href="/dashboard" style={{ color: '#065f46', fontWeight: 600 }}>Manage it in My Listings →</a>
+                <a href="/dashboard" style={{ color: 'var(--color-success)', fontWeight: 600 }}>Manage it in My Listings →</a>
               </div>
             )}
           </div>

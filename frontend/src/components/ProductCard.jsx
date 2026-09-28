@@ -44,7 +44,7 @@ const ProductCard = memo(({ product }) => {
           This is more performant AND works on touch devices correctly. */}
       <style>{`
         .product-card {
-          background: white;
+          background: var(--color-bg-subtle);
           border: 1px solid var(--color-border);
           border-radius: var(--radius-lg);
           overflow: hidden;
@@ -107,12 +107,12 @@ const ProductCard = memo(({ product }) => {
           {/* Category badge — overlaid on image */}
           <span style={{
             position: 'absolute', top: '10px', left: '10px',
-            background: 'rgba(255,255,255,0.92)',
+            background: 'rgba(3,9,20,0.88)',
             backdropFilter: 'blur(8px)',
             color: 'var(--color-text-secondary)',
             fontSize: '11px', fontWeight: 500,
             padding: '3px 9px', borderRadius: '999px',
-            border: '1px solid rgba(255,255,255,0.6)',
+            border: '1px solid var(--color-border-strong)',
           }}>
             {product.category}
           </span>

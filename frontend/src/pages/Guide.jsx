@@ -34,10 +34,10 @@ const Guide = () => {
         .guide-card { padding: 26px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-bg-subtle); }
         .guide-card-heading { display: flex; align-items: center; gap: 11px; margin-bottom: 22px; }
         .guide-card-heading h2 { margin: 0; font-size: 19px; letter-spacing: -0.02em; }
-        .guide-card-label { width: 30px; height: 30px; display: grid; place-items: center; flex: 0 0 30px; border-radius: 50%; background: var(--color-text-primary); color: white; font-size: 13px; font-weight: 700; }
+        .guide-card-label { width: 30px; height: 30px; display: grid; place-items: center; flex: 0 0 30px; border-radius: 50%; background: var(--color-accent); color: #04101c; font-size: 13px; font-weight: 700; }
         .guide-card ol { display: grid; gap: 18px; margin: 0; padding: 0; list-style: none; }
         .guide-card li { display: grid; grid-template-columns: 25px 1fr; gap: 11px; align-items: start; }
-        .guide-card li > span { width: 25px; height: 25px; display: grid; place-items: center; border: 1px solid var(--color-border-strong); border-radius: 50%; background: white; color: var(--color-text-secondary); font-size: 11px; font-weight: 700; }
+        .guide-card li > span { width: 25px; height: 25px; display: grid; place-items: center; border: 1px solid var(--color-border-strong); border-radius: 50%; background: var(--color-bg-primary); color: var(--color-text-secondary); font-size: 11px; font-weight: 700; }
         .guide-card li p { margin: 1px 0 0; color: var(--color-text-secondary); font-size: 14px; line-height: 1.6; }
         .guide-safety { margin: 18px 0 56px; padding: 16px 18px; display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
         .guide-safety svg { flex: 0 0 auto; margin-top: 2px; }
@@ -53,12 +53,12 @@ const Guide = () => {
         .guide-faq-list summary::after { content: '+'; color: var(--color-text-muted); font-size: 20px; font-weight: 400; }
         .guide-faq-list details[open] summary::after { content: '−'; }
         .guide-faq-list details p { max-width: 720px; margin: -5px 0 20px; color: var(--color-text-secondary); font-size: 14px; line-height: 1.65; }
-        .guide-cta { margin-top: 54px; padding: 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-radius: var(--radius-lg); background: var(--color-text-primary); color: white; }
+        .guide-cta { margin-top: 54px; padding: 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border: 1px solid var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-bg-subtle); color: var(--color-text-primary); }
         .guide-cta h2 { margin: 0 0 5px; font-size: 20px; }
-        .guide-cta p { margin: 0; color: #d4d4d4; font-size: 13px; }
+        .guide-cta p { margin: 0; color: var(--color-text-secondary); font-size: 13px; }
         .guide-cta-actions { display: flex; gap: 10px; flex-shrink: 0; }
-        .guide-cta .guide-light-button { background: white; color: var(--color-text-primary); }
-        .guide-cta .guide-outline-button { border-color: #525252; background: transparent; color: white; }
+        .guide-cta .guide-light-button { background: var(--color-accent); color: #04101c; }
+        .guide-cta .guide-outline-button { border-color: var(--color-border-strong); background: transparent; color: var(--color-text-primary); }
         @media (max-width: 680px) {
           .guide-page { padding: 40px 16px 56px; }
           .guide-grid { grid-template-columns: 1fr; }

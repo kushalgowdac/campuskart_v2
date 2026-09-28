@@ -207,7 +207,7 @@ const ContactSeller = () => {
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '14px 16px',
-                  background: 'white', border: '1px solid var(--color-border)',
+                  background: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)',
                   borderRadius: 'var(--radius-md)', textDecoration: 'none',
                   color: 'var(--color-text-primary)', transition: 'background 0.15s, border-color 0.15s',
                 }}
@@ -228,7 +228,7 @@ const ContactSeller = () => {
             ))}
 
             {seller.other_contact_details && (
-              <div style={{ padding: '14px 16px', background: 'white', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ padding: '14px 16px', background: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                   <span style={{ color: 'var(--color-text-secondary)', display: 'flex' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

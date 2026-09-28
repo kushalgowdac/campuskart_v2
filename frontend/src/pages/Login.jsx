@@ -79,8 +79,8 @@ const Login = () => {
             disabled={loading}
             style={{
               width: '100%', padding: '11px 16px',
-              background: loading ? 'var(--color-bg-hover)' : 'white',
-              color: 'var(--color-text-primary)',
+              background: loading ? '#e2e8f0' : 'white',
+              color: '#17202a',
               border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)',
               fontSize: '14px', fontWeight: 500, fontFamily: 'var(--font-sans)',
               cursor: loading ? 'not-allowed' : 'pointer',
@@ -88,7 +88,7 @@ const Login = () => {
               transition: 'background 0.15s, border-color 0.15s',
               boxShadow: 'var(--shadow-sm)',
             }}
-            onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = 'var(--color-bg-hover)'; e.currentTarget.style.borderColor = 'var(--color-border-strong)'; } }}
+            onMouseEnter={e => { if (!loading) { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.borderColor = '#94a3b8'; } }}
             onMouseLeave={e => { if (!loading) { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = 'var(--color-border)'; } }}
           >
             {loading ? (
@@ -110,7 +110,7 @@ const Login = () => {
 
           {/* Error */}
           {error && (
-            <div style={{ marginTop: '14px', padding: '10px 12px', background: 'var(--color-danger-subtle)', border: '1px solid #fecaca', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-danger)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+            <div style={{ marginTop: '14px', padding: '10px 12px', background: 'var(--color-danger-subtle)', border: '1px solid #70313c', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-danger)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
               <span>{error}</span>
               <button onClick={() => setError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', fontSize: '16px', lineHeight: 1, flexShrink: 0, padding: 0 }}>×</button>
             </div>

@@ -81,7 +81,7 @@ const Admin = () => {
       <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '20px' }}>Admin Panel</h1>
 
       {actionError && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--color-danger-subtle)', border: '1px solid #fecaca', borderRadius: 'var(--radius-md)', color: 'var(--color-danger)', fontSize: '13px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--color-danger-subtle)', border: '1px solid #70313c', borderRadius: 'var(--radius-md)', color: 'var(--color-danger)', fontSize: '13px', marginBottom: '20px' }}>
           {actionError}
           <button onClick={() => setActionError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', fontSize: '16px', padding: '0 4px' }}>×</button>
         </div>

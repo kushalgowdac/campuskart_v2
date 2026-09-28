@@ -134,22 +134,22 @@ const Dashboard = () => {
       </div>
 
       {actionError && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--color-danger-subtle)', border: '1px solid #fecaca', borderRadius: 'var(--radius-md)', color: 'var(--color-danger)', fontSize: '13px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--color-danger-subtle)', border: '1px solid #70313c', borderRadius: 'var(--radius-md)', color: 'var(--color-danger)', fontSize: '13px', marginBottom: '20px' }}>
           {actionError}
           <button onClick={() => setActionError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', fontSize: '16px', padding: '0 4px' }}>×</button>
         </div>
       )}
 
       {actionNotice && (
-        <div style={{ padding: '12px 16px', background: 'var(--color-accent-subtle)', border: '1px solid #6ee7b7', borderRadius: 'var(--radius-md)', color: '#065f46', fontSize: '13px', marginBottom: '20px' }}>
+        <div style={{ padding: '12px 16px', background: 'var(--color-success-subtle)', border: '1px solid #285f48', borderRadius: 'var(--radius-md)', color: 'var(--color-success)', fontSize: '13px', marginBottom: '20px' }}>
           {actionNotice}
         </div>
       )}
 
       {/* Inline delete confirmation — replaces window.confirm() entirely */}
       {confirmDelete && (
-        <div style={{ padding: '14px 16px', background: 'var(--color-warning-subtle)', border: '1px solid #fde68a', borderRadius: 'var(--radius-md)', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <p style={{ margin: 0, fontSize: '14px', color: '#92400e' }}>
+        <div style={{ padding: '14px 16px', background: 'var(--color-warning-subtle)', border: '1px solid #685327', borderRadius: 'var(--radius-md)', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <p style={{ margin: 0, fontSize: '14px', color: 'var(--color-warning)' }}>
             Delete this listing permanently? This cannot be undone.
           </p>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -243,7 +243,7 @@ const Dashboard = () => {
                           }}
                           hint={`${editForm.description.length}/2000 characters`}
                         />
-                        <p style={{ margin: 0, color: '#92400e', fontSize: '12px', lineHeight: 1.5 }}>
+                        <p style={{ margin: 0, color: 'var(--color-warning)', fontSize: '12px', lineHeight: 1.5 }}>
                           Saving changes temporarily removes this listing from Browse and sends it for admin review again.
                         </p>
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -260,7 +260,7 @@ const Dashboard = () => {
 
                   {/* Rejection notice — shown inline on the card */}
                   {isRejected && (
-                    <div style={{ padding: '10px 12px', background: 'var(--color-danger-subtle)', border: '1px solid #fecaca', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-danger)', marginBottom: '10px', lineHeight: 1.5 }}>
+                    <div style={{ padding: '10px 12px', background: 'var(--color-danger-subtle)', border: '1px solid #70313c', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-danger)', marginBottom: '10px', lineHeight: 1.5 }}>
                       <strong>Not approved.</strong> Check your notifications for the reason.
                       To sell this item, delete this listing and submit a new one with the issue fixed.
                     </div>

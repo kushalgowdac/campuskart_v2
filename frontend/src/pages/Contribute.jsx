@@ -125,9 +125,9 @@ const Contribute = () => {
               <p className="text-muted">Opens your email app with the message pre-filled.</p>
             </div>
           ) : (
-            <div style={{ padding: '14px', background: 'var(--color-accent-subtle)', border: '1px solid #6ee7b7', borderRadius: 'var(--radius-sm)', fontSize: '14px', color: '#065f46' }}>
+            <div style={{ padding: '14px', background: 'var(--color-success-subtle)', border: '1px solid #285f48', borderRadius: 'var(--radius-sm)', fontSize: '14px', color: 'var(--color-success)' }}>
               Thanks! Your email app should have opened. Send the email to submit your feedback.
-              <button onClick={() => setSubmitted(false)} style={{ background: 'none', border: 'none', color: '#065f46', cursor: 'pointer', textDecoration: 'underline', marginLeft: '8px', fontSize: '14px' }}>
+              <button onClick={() => setSubmitted(false)} style={{ background: 'none', border: 'none', color: 'var(--color-success)', cursor: 'pointer', textDecoration: 'underline', marginLeft: '8px', fontSize: '14px' }}>
                 Send another
               </button>
             </div>

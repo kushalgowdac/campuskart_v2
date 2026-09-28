@@ -131,12 +131,12 @@ const Sell = () => {
       </p>
 
       {/* Responsibility notice */}
-      <div style={{ display: 'flex', gap: '10px', padding: '12px 14px', background: 'var(--color-warning-subtle)', border: '1px solid #fde68a', borderRadius: 'var(--radius-sm)', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', gap: '10px', padding: '12px 14px', background: 'var(--color-warning-subtle)', border: '1px solid #685327', borderRadius: 'var(--radius-sm)', marginBottom: '24px' }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--color-warning)', flexShrink: 0, marginTop: '1px' }}>
           <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
           <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
-        <p style={{ fontSize: '13px', color: '#92400e', margin: 0, lineHeight: 1.5 }}>
+        <p style={{ fontSize: '13px', color: 'var(--color-warning)', margin: 0, lineHeight: 1.5 }}>
           Once your deal is done, it is <strong>your responsibility</strong> to mark the item as sold or hidden.
         </p>
       </div>
@@ -248,7 +248,7 @@ const Sell = () => {
 
               {/* Total compression summary */}
               {totalOriginalKB > 0 && (
-                <div style={{ padding: '8px 12px', background: 'var(--color-accent-subtle)', border: '1px solid #6ee7b7', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ padding: '8px 12px', background: 'var(--color-success-subtle)', border: '1px solid #285f48', borderRadius: 'var(--radius-sm)', fontSize: '12px', color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                   Compressed: {totalOriginalKB > 1024 ? `${(totalOriginalKB/1024).toFixed(1)}MB` : `${totalOriginalKB}KB`} → {totalCompressedKB > 1024 ? `${(totalCompressedKB/1024).toFixed(1)}MB` : `${totalCompressedKB}KB`}
                   {' '}({Math.round((1 - totalCompressedKB/totalOriginalKB) * 100)}% smaller)
@@ -287,7 +287,7 @@ const Sell = () => {
         </div>
 
         {error && (
-          <div style={{ padding: '10px 14px', background: 'var(--color-danger-subtle)', border: '1px solid #fecaca', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-danger)' }}>
+          <div style={{ padding: '10px 14px', background: 'var(--color-danger-subtle)', border: '1px solid #70313c', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-danger)' }}>
             {error}
           </div>
         )}

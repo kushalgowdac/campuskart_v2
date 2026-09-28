@@ -81,9 +81,9 @@ const Navbar = () => {
           border-radius: 6px;
           transition: background 0.15s, color 0.15s;
         }
-        .nav-link:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
+        .nav-link:hover { background: var(--color-bg-hover); color: var(--color-accent); }
         .nav-link-active {
-          color: var(--color-text-primary);
+          color: var(--color-accent);
           font-weight: 600;
           background: var(--color-bg-hover);
         }
@@ -197,7 +197,7 @@ const CloseIcon = () => (
 const styles = {
   nav: {
     position: 'sticky', top: 0, zIndex: 100,
-    background: 'rgba(255,255,255,0.92)',
+    background: 'rgba(3,9,20,0.92)',
     backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
     borderBottom: '1px solid var(--color-border)',
   },
@@ -226,7 +226,7 @@ const styles = {
     color: 'var(--color-text-primary)', borderRadius: '6px', alignItems: 'center', justifyContent: 'center',
   },
   mobileMenu: {
-    position: 'fixed', top: '60px', left: 0, right: 0, background: 'white',
+    position: 'fixed', top: '60px', left: 0, right: 0, background: 'var(--color-bg-subtle)',
     borderBottom: '1px solid var(--color-border)', padding: '8px 16px 16px',
     zIndex: 99, boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
     display: 'flex', flexDirection: 'column', gap: '2px',

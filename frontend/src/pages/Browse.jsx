@@ -175,18 +175,18 @@ const Browse = () => {
   return (
     <>
       <style>{`
-        .filter-bar { position: sticky; top: 60px; z-index: 90; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--color-border); }
+        .filter-bar { position: sticky; top: 60px; z-index: 90; background: rgba(3,9,20,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--color-border); }
         .filter-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .search-form { display: flex; flex: 1 1 320px; max-width: 520px; gap: 8px; }
         .search-field { position: relative; flex: 1; min-width: 0; }
-        .cat-chip { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--color-border); background: white; color: var(--color-text-secondary); cursor: pointer; font-size: 13px; font-weight: 500; font-family: var(--font-sans); transition: all 0.15s; white-space: nowrap; }
+        .cat-chip { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--color-border); background: var(--color-bg-subtle); color: var(--color-text-secondary); cursor: pointer; font-size: 13px; font-weight: 500; font-family: var(--font-sans); transition: all 0.15s; white-space: nowrap; }
         .cat-chip:hover { border-color: var(--color-text-primary); color: var(--color-text-primary); }
-        .cat-chip.active { background: var(--color-text-primary); border-color: var(--color-text-primary); color: white; }
+        .cat-chip.active { background: var(--color-accent); border-color: var(--color-accent); color: #04101c; }
         .srch { width: 100%; padding: 10px 38px 10px 40px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 14px; font-family: var(--font-sans); outline: none; background: var(--color-bg-subtle); color: var(--color-text-primary); transition: border-color 0.15s, background 0.15s; }
         .srch::-webkit-search-cancel-button { appearance: none; }
-        .srch:focus { border-color: var(--color-text-primary); background: white; }
+        .srch:focus { border-color: var(--color-accent); background: var(--color-bg-subtle); }
         .srch::placeholder { color: var(--color-text-muted); }
-        .srt { padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 13px; font-family: var(--font-sans); background: white; color: var(--color-text-secondary); cursor: pointer; outline: none; }
+        .srt { padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 13px; font-family: var(--font-sans); background: var(--color-bg-subtle); color: var(--color-text-secondary); cursor: pointer; outline: none; }
         @media (max-width: 600px) {
           .filter-controls { align-items: stretch; }
           .search-form { flex-basis: 100%; max-width: none; }
@@ -256,7 +256,7 @@ const Browse = () => {
         )}
 
         {error && (
-          <div style={{ padding: '16px', background: 'var(--color-danger-subtle)', border: '1px solid #fecaca', borderRadius: 'var(--radius-md)', color: 'var(--color-danger)', fontSize: '14px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ padding: '16px', background: 'var(--color-danger-subtle)', border: '1px solid #70313c', borderRadius: 'var(--radius-md)', color: 'var(--color-danger)', fontSize: '14px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
             {error}
             <button onClick={() => fetchProducts({ force: true })} className="btn-secondary" style={{ fontSize: '12px', padding: '5px 10px' }}>Retry</button>
           </div>

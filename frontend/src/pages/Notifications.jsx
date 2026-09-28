@@ -76,14 +76,14 @@ const Notifications = () => {
                 style={{
                   display: 'flex', gap: '14px', alignItems: 'flex-start',
                   padding: '14px 16px',
-                  background: n.is_read ? 'white' : 'var(--color-bg-subtle)',
+                  background: n.is_read ? 'var(--color-bg-subtle)' : 'var(--color-bg-hover)',
                   border: `1px solid ${n.is_read ? 'var(--color-border)' : 'var(--color-border-strong)'}`,
                   borderRadius: 'var(--radius-md)',
                   cursor: n.product_id ? 'pointer' : 'default',
                   transition: 'background 0.15s',
                 }}
                 onMouseEnter={e => { if (n.product_id) e.currentTarget.style.background = 'var(--color-bg-hover)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = n.is_read ? 'white' : 'var(--color-bg-subtle)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = n.is_read ? 'var(--color-bg-subtle)' : 'var(--color-bg-hover)'; }}
               >
                 {/* Icon badge */}
                 <div className={`badge ${meta.badge}`} style={{ width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 600, padding: 0 }}>

@@ -20,35 +20,32 @@
    Change --color-primary here and every button, link, and accent
    updates automatically. This is what a "design system" means in code.
 
-   Our palette is deliberately monochromatic:
-   - Near-black for text and primary actions (not pure black — too harsh)
-   - White for surfaces
-   - One accent color (emerald) for prices only
-   - No blue anywhere (except the Google button which must stay Google blue) */
+   This palette extends the welcome page's navy and sky-blue visual
+   language through the authenticated marketplace. */
 :root {
   /* Color */
-  --color-text-primary:   #0a0a0a;   /* near-black — headings, body text, buttons */
-  --color-text-secondary: #525252;   /* mid-gray — subtitles, metadata */
-  --color-text-muted:     #a3a3a3;   /* light gray — placeholders, timestamps */
+  --color-text-primary:   #eff8ff;
+  --color-text-secondary: #9ab1c3;
+  --color-text-muted:     #668196;
 
-  --color-bg-primary:     #ffffff;   /* white — page background */
-  --color-bg-subtle:      #fafafa;   /* near-white — card backgrounds */
-  --color-bg-hover:       #f5f5f5;   /* hover state for interactive elements */
+  --color-bg-primary:     #030914;
+  --color-bg-subtle:      #081321;
+  --color-bg-hover:       #0d1c2c;
 
-  --color-border:         #e5e5e5;   /* standard border */
-  --color-border-strong:  #d4d4d4;   /* focused input border */
+  --color-border:         #1c3852;
+  --color-border-strong:  #3f7196;
 
-  --color-accent:         #10b981;   /* emerald — prices only. Single pop of color. */
-  --color-accent-subtle:  #ecfdf5;   /* emerald-50 — accent backgrounds */
+  --color-accent:         #78c6ff;
+  --color-accent-subtle:  #102b40;
 
-  --color-danger:         #ef4444;   /* red — errors, delete actions */
-  --color-danger-subtle:  #fef2f2;   /* red-50 — error backgrounds */
+  --color-danger:         #ff8f9b;
+  --color-danger-subtle:  #2a141c;
 
-  --color-warning:        #f59e0b;   /* amber — warnings */
-  --color-warning-subtle: #fffbeb;   /* amber-50 — warning backgrounds */
+  --color-warning:        #f7c66a;
+  --color-warning-subtle: #29210f;
 
-  --color-success:        #10b981;   /* same as accent */
-  --color-success-subtle: #ecfdf5;
+  --color-success:        #72dda7;
+  --color-success-subtle: #10281d;
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -78,6 +75,7 @@
 
 /* ── Base styles ─────────────────────────────────────────────*/
 body {
+  min-height: 100vh;
   font-family: var(--font-sans);
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
@@ -98,8 +96,8 @@ body {
   justify-content: center;
   gap: var(--space-2);
   padding: 10px 18px;
-  background: var(--color-text-primary);
-  color: white;
+  background: var(--color-accent);
+  color: #04101c;
   border: none;
   border-radius: var(--radius-sm);
   font-family: var(--font-sans);
@@ -111,7 +109,7 @@ body {
   white-space: nowrap;
 }
 .btn-primary:hover {
-  background: #171717;
+  background: #a8dcff;
   transform: translateY(-1px);
 }
 .btn-primary:active { transform: translateY(0); }
@@ -128,7 +126,7 @@ body {
   justify-content: center;
   gap: var(--space-2);
   padding: 9px 17px;
-  background: white;
+  background: var(--color-bg-subtle);
   color: var(--color-text-primary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -179,7 +177,7 @@ body {
   padding: 8px 14px;
   background: var(--color-danger-subtle);
   color: var(--color-danger);
-  border: 1px solid #fecaca;
+  border: 1px solid #70313c;
   border-radius: var(--radius-sm);
   font-family: var(--font-sans);
   font-size: 13px;
@@ -187,13 +185,13 @@ body {
   cursor: pointer;
   transition: background 0.15s;
 }
-.btn-danger:hover { background: #fee2e2; }
+.btn-danger:hover { background: #3a1822; }
 
 /* Form input */
 .input {
   width: 100%;
   padding: 10px 12px;
-  background: white;
+  background: var(--color-bg-subtle);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-family: var(--font-sans);
@@ -216,7 +214,7 @@ body {
 
 /* Card */
 .card {
-  background: white;
+  background: var(--color-bg-subtle);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
@@ -243,11 +241,11 @@ body {
   letter-spacing: 0.01em;
 }
 .badge-gray     { background: var(--color-bg-hover); color: var(--color-text-secondary); }
-.badge-black    { background: var(--color-text-primary); color: white; }
-.badge-green    { background: var(--color-accent-subtle); color: #059669; }
-.badge-amber    { background: var(--color-warning-subtle); color: #b45309; }
-.badge-red      { background: var(--color-danger-subtle); color: #b91c1c; }
-.badge-blue     { background: #eff6ff; color: #1d4ed8; }  /* kept for category chips only */
+.badge-black    { background: var(--color-accent); color: #04101c; }
+.badge-green    { background: var(--color-success-subtle); color: var(--color-success); }
+.badge-amber    { background: var(--color-warning-subtle); color: var(--color-warning); }
+.badge-red      { background: var(--color-danger-subtle); color: var(--color-danger); }
+.badge-blue     { background: var(--color-accent-subtle); color: var(--color-accent); }
 
 /* Page container — max width + centering */
 .page {

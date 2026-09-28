@@ -84,13 +84,13 @@ const Profile = () => {
         </div>
 
         {error && (
-          <div style={{ padding: '10px 12px', background: 'var(--color-danger-subtle)', border: '1px solid #fecaca', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-danger)' }}>
+          <div style={{ padding: '10px 12px', background: 'var(--color-danger-subtle)', border: '1px solid #70313c', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-danger)' }}>
             {error}
           </div>
         )}
 
         {success && (
-          <div style={{ padding: '10px 12px', background: 'var(--color-accent-subtle)', border: '1px solid #6ee7b7', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: '#065f46', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ padding: '10px 12px', background: 'var(--color-success-subtle)', border: '1px solid #285f48', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             Profile saved successfully.
           </div>
