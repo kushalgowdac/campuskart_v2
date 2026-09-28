@@ -94,9 +94,9 @@ export const AuthProvider = ({ children }) => {
             // console.log("REDIRECTING TO SETUP");
             window.location.href = '/setup';
           } else {
-            // Returning user — go home (but only if currently on /login)
-            if (window.location.pathname === '/login') {
-              window.location.href = '/';
+            // Returning user — leave the login/welcome route for the marketplace.
+            if (window.location.pathname === '/login' || window.location.pathname === '/') {
+              window.location.href = '/browse';
             }
           }
 

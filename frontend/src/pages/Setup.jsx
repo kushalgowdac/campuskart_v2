@@ -27,13 +27,13 @@ const Setup = () => {
     try {
       const res = await api.put('/api/auth/profile', { ...form, is_profile_complete: true });
       login(null, res.data);
-      navigate('/', { replace: true });
+      navigate('/browse', { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to save profile.');
     } finally { setSaving(false); }
   };
 
-  const handleSkip = () => navigate('/', { replace: true });
+  const handleSkip = () => navigate('/browse', { replace: true });
 
   return (
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--color-bg-primary)', padding: '1.5rem' }}>

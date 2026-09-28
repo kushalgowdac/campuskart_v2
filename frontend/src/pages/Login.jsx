@@ -18,7 +18,7 @@ const Login = () => {
   const [error, setError]     = useState(() => sessionStorage.getItem('auth-error') || '');
 
   useEffect(() => {
-    if (isLoggedIn) navigate('/', { replace: true });
+    if (isLoggedIn) navigate('/browse', { replace: true });
   }, [isLoggedIn, navigate]);
 
   useEffect(() => {

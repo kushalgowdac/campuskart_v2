@@ -99,7 +99,6 @@ const Welcome = () => {
         .landing-nav-links { display: flex; align-items: center; gap: 30px; }
         .landing-nav-links a { color: #b9d0e3; text-decoration: none; font-size: 13px; transition: color 0.15s; }
         .landing-nav-links a:hover { color: white; }
-        .landing-nav-actions { display: flex; gap: 10px; }
         .landing-button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 19px; border: 1px solid #294863; border-radius: 7px; font-family: var(--font-sans); font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; transition: transform 0.15s, background 0.15s, border-color 0.15s; }
         .landing-button:hover { transform: translateY(-1px); }
         .landing-button-primary { border-color: #d9efff; background: #d9efff; color: #06111d; }
@@ -107,13 +106,13 @@ const Welcome = () => {
         .landing-button-primary:disabled { opacity: 0.65; cursor: wait; transform: none; }
         .landing-button-secondary { background: transparent; color: #d7eafa; }
         .landing-button-secondary:hover { border-color: #78c6ff; background: rgba(120,198,255,0.07); }
-        .landing-hero { width: min(1320px, calc(100% - 48px)); min-height: 650px; margin: 0 auto; display: grid; grid-template-columns: minmax(420px, 0.9fr) minmax(520px, 1.2fr); align-items: center; gap: 10px; }
-        .landing-copy { position: relative; z-index: 2; padding: 72px 0 92px; }
+        .landing-hero { width: min(1320px, calc(100% - 48px)); min-height: 540px; margin: 0 auto; display: grid; grid-template-columns: minmax(420px, 0.9fr) minmax(520px, 1.2fr); align-items: center; gap: 10px; }
+        .landing-copy { position: relative; z-index: 2; padding: 72px 0; }
         .landing-kicker { display: inline-flex; align-items: center; gap: 9px; margin-bottom: 24px; color: var(--landing-blue); font-size: 12px; font-weight: 650; letter-spacing: 0.09em; text-transform: uppercase; }
         .landing-kicker::before { content: ''; width: 28px; height: 1px; background: currentColor; }
         .landing-copy h1 { max-width: 650px; margin: 0; color: var(--landing-blue); font-size: clamp(52px, 6.4vw, 92px); font-weight: 450; line-height: 0.98; letter-spacing: -0.065em; }
         .landing-copy > p { max-width: 580px; margin: 30px 0 0; color: #bdd2e3; font-size: 17px; line-height: 1.65; }
-        .landing-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+        .landing-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
         .landing-access { margin-top: 15px; color: #7892a8; font-size: 12px; line-height: 1.5; }
         .landing-access strong { color: #abc4d7; }
         .landing-error { max-width: 550px; margin-top: 14px; padding: 10px 12px; border: 1px solid #7f3540; border-radius: 6px; background: rgba(127,53,64,0.16); color: #ffb7c0; font-size: 13px; }
@@ -136,17 +135,24 @@ const Welcome = () => {
         .landing-guide-card li p { margin: 0; color: #9ab1c3; font-size: 13px; line-height: 1.6; }
         .landing-safety { margin-top: 18px; padding: 15px 18px; border: 1px solid var(--landing-line); border-radius: 8px; color: #8fa9bd; font-size: 13px; line-height: 1.55; }
         .landing-safety strong { color: #d6e8f5; }
+        .landing-final-cta { margin-top: 48px; padding: 30px; display: flex; align-items: center; justify-content: space-between; gap: 32px; border: 1px solid #2b5778; border-radius: 10px; background: rgba(120,198,255,0.07); }
+        .landing-final-cta-copy { max-width: 510px; }
+        .landing-final-cta-copy h3 { margin: 0 0 8px; color: #eff8ff; font-size: 24px; font-weight: 550; letter-spacing: -0.03em; }
+        .landing-final-cta-copy p { margin: 0; color: #94adbf; font-size: 13px; line-height: 1.6; }
+        .landing-final-cta-actions { flex-shrink: 0; }
+        .landing-final-cta-actions .landing-access { text-align: right; }
         @media (max-width: 900px) {
           .landing-nav-links { display: none; }
           .landing-hero { min-height: auto; grid-template-columns: 1fr; padding-bottom: 50px; }
           .landing-copy { padding: 76px 0 20px; }
           .landing-copy h1 { max-width: 760px; }
           .landing-art { width: 105%; max-width: 760px; margin: -15px auto 0; }
+          .landing-final-cta { align-items: flex-start; flex-direction: column; }
+          .landing-final-cta-actions { width: 100%; }
+          .landing-final-cta-actions .landing-access { text-align: left; }
         }
         @media (max-width: 620px) {
           .landing-nav { width: calc(100% - 32px); height: 64px; }
-          .landing-nav-actions .landing-button-secondary { display: none; }
-          .landing-nav-actions .landing-button { min-height: 38px; padding: 0 13px; font-size: 12px; }
           .landing-hero { width: calc(100% - 32px); }
           .landing-copy { padding-top: 58px; }
           .landing-copy h1 { font-size: clamp(44px, 15vw, 65px); }
@@ -156,6 +162,7 @@ const Welcome = () => {
           .landing-art { width: 125%; margin-left: -12%; }
           .landing-guide-inner { width: calc(100% - 32px); padding: 68px 0 72px; }
           .landing-guide-grid { grid-template-columns: 1fr; }
+          .landing-final-cta { padding: 22px; }
         }
       `}</style>
 
@@ -167,33 +174,15 @@ const Welcome = () => {
         <nav className="landing-nav-links" aria-label="Welcome page navigation">
           <a href="#how-it-works">How it works</a>
           <Link to="/guide">Guide</Link>
-          <Link to="/browse">Browse items</Link>
         </nav>
-        <div className="landing-nav-actions">
-          <Link className="landing-button landing-button-secondary" to="/browse">Browse items</Link>
-          <button className="landing-button landing-button-primary" type="button" onClick={signInWithGoogle} disabled={loading}>
-            {loading ? 'Redirecting…' : 'Sign in'}
-          </button>
-        </div>
       </header>
 
       <main id="top">
         <section className="landing-hero">
           <div className="landing-copy">
             <span className="landing-kicker">Built for the RVCE community</span>
-            <h1>Campus finds, without the clutter.</h1>
-            <p>Discover useful items, connect directly with fellow students, and give pre-owned products a second life—all within your campus community.</p>
-            <div className="landing-hero-actions">
-              <button className="landing-button landing-button-primary" type="button" onClick={signInWithGoogle} disabled={loading}>
-                {loading ? 'Redirecting to Google…' : 'Sign in / Sign up with Google'}
-              </button>
-              <Link className="landing-button landing-button-secondary" to="/browse">Browse items</Link>
-            </div>
-            <div className="landing-access">
-              <strong>Google sign-in is limited to @rvce.edu.in accounts.</strong><br />
-              No account is needed to browse public listings.
-            </div>
-            {error && <div className="landing-error" role="alert">{error}</div>}
+            <h1>Welcome,<br />RVians.</h1>
+            <p>Before you begin, here is everything you need to know about discovering, buying, and selling pre-owned items within your campus community.</p>
           </div>
           <div className="landing-art" aria-hidden="true">
             <SignalGraphic />
@@ -213,6 +202,25 @@ const Welcome = () => {
             </div>
             <div className="landing-safety">
               <strong>Meet safely:</strong> inspect items before paying and choose a public place on campus for every handover.
+            </div>
+            <div className="landing-final-cta">
+              <div className="landing-final-cta-copy">
+                <h3>Ready to enter CampusKart?</h3>
+                <p>Sign in to contact sellers and create listings, or explore everything currently available without an account.</p>
+              </div>
+              <div className="landing-final-cta-actions">
+                <div className="landing-hero-actions">
+                  <button className="landing-button landing-button-primary" type="button" onClick={signInWithGoogle} disabled={loading}>
+                    {loading ? 'Redirecting to Google…' : 'Sign in / Sign up with Google'}
+                  </button>
+                  <Link className="landing-button landing-button-secondary" to="/browse">Browse items</Link>
+                </div>
+                <div className="landing-access">
+                  <strong>Sign-in requires an @rvce.edu.in Google account.</strong><br />
+                  Anyone can browse public listings.
+                </div>
+                {error && <div className="landing-error" role="alert">{error}</div>}
+              </div>
             </div>
           </div>
         </section>

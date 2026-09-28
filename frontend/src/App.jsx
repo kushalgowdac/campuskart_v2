@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
@@ -27,16 +27,10 @@ const RouteFallback = () => (
   </div>
 );
 
-const Home = () => {
-  const { isLoggedIn } = useAuth();
-  return isLoggedIn ? <Browse /> : <Welcome />;
-};
-
 const SiteNavbar = () => {
-  const { isLoggedIn } = useAuth();
   const { pathname } = useLocation();
 
-  if (!isLoggedIn && pathname === '/') return null;
+  if (pathname === '/') return null;
   return <Navbar />;
 };
 
@@ -56,7 +50,7 @@ function App() {
           <Suspense fallback={<RouteFallback />}>
             <Routes>
             {/* Public */}
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Welcome />} />
             <Route path="/browse" element={<Browse />} />
             <Route path="/guide" element={<Guide />} />
             <Route path="/login" element={<Login />} />
