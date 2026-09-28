@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { BUYER_STEPS, SELLER_STEPS } from '../content/marketplaceGuide';
 
-const MarketplaceGuideModal = ({ onAcknowledge, actionLabel = 'Got it, start browsing' }) => {
+const MarketplaceGuideModal = ({ onAcknowledge, onBrowse, actionLabel = 'Sign in' }) => {
   const acknowledgeButtonRef = useRef(null);
 
   useEffect(() => {
@@ -32,8 +32,8 @@ const MarketplaceGuideModal = ({ onAcknowledge, actionLabel = 'Got it, start bro
             </svg>
           </span>
           <div>
-            <h2 id="marketplace-guide-title">How CampusKart works</h2>
-            <p id="marketplace-guide-description">A quick guide before you start buying or selling.</p>
+            <h2 id="marketplace-guide-title">Welcome to CampusKart</h2>
+            <p id="marketplace-guide-description">Buy and sell within the RVCE student community.</p>
           </div>
         </div>
 
@@ -63,10 +63,18 @@ const MarketplaceGuideModal = ({ onAcknowledge, actionLabel = 'Got it, start bro
         </div>
 
         <div className="marketplace-guide-footer">
-          <p>Keep conversations respectful and meet in a safe place on campus.</p>
-          <button ref={acknowledgeButtonRef} type="button" className="btn-primary" onClick={onAcknowledge}>
-            {actionLabel}
-          </button>
+          <div className="marketplace-guide-access">
+            <strong>Sign-in is only for RVCE students</strong>
+            <span>Use your @rvce.edu.in Google account. Anyone can browse listings without signing in.</span>
+          </div>
+          <div className="marketplace-guide-actions">
+            <button type="button" className="btn-secondary" onClick={onBrowse}>
+              Browse without signing in
+            </button>
+            <button ref={acknowledgeButtonRef} type="button" className="btn-primary" onClick={onAcknowledge}>
+              {actionLabel}
+            </button>
+          </div>
         </div>
       </section>
     </div>

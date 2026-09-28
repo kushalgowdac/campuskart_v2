@@ -27,18 +27,23 @@ const RouteFallback = () => (
   </div>
 );
 
-const ENTRY_GUIDE_SEEN_KEY = 'campuskart-entry-guide-seen';
+const WELCOME_SEEN_KEY = 'campuskart-welcome-seen-v2';
 
 const SiteEntryGuide = () => {
   const { isLoggedIn } = useAuth();
   const [showGuide, setShowGuide] = useState(
-    () => !sessionStorage.getItem(ENTRY_GUIDE_SEEN_KEY)
+    () => !sessionStorage.getItem(WELCOME_SEEN_KEY)
   );
 
   if (isLoggedIn || !showGuide) return null;
 
+  const continueBrowsing = () => {
+    sessionStorage.setItem(WELCOME_SEEN_KEY, 'true');
+    setShowGuide(false);
+  };
+
   const signInWithGoogle = async () => {
-    sessionStorage.setItem(ENTRY_GUIDE_SEEN_KEY, 'true');
+    sessionStorage.setItem(WELCOME_SEEN_KEY, 'true');
     setShowGuide(false);
 
     try {
@@ -56,7 +61,8 @@ const SiteEntryGuide = () => {
   return (
     <MarketplaceGuideModal
       onAcknowledge={signInWithGoogle}
-      actionLabel="Sign in with Google"
+      onBrowse={continueBrowsing}
+      actionLabel="Sign in with RVCE Google"
     />
   );
 };
