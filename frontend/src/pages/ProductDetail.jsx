@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
-import Button from '../components/Button';
+import { ShieldCheck } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { productDetailImage, squareThumbnailImage } from '../utils/cloudinaryImage';
 import {
   PRODUCT_DETAIL_CACHE_TTL,
@@ -82,7 +85,7 @@ const ProductDetail = () => {
   if (error || !product) return (
     <div className="page" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
       <p style={{ color: 'var(--color-text-secondary)', marginBottom: '16px' }}>{error || 'Product not found'}</p>
-      <Button variant="secondary" onClick={() => navigate(-1)}>Go back</Button>
+      <Button variant="outline" onClick={() => navigate(-1)}>Go back</Button>
     </div>
   );
 
@@ -106,13 +109,13 @@ const ProductDetail = () => {
         @media (max-width: 640px) { .product-grid { grid-template-columns: 1fr !important; } }
       `}</style>
 
-      <div className="page" style={{ maxWidth: '900px' }}>
+      <div className="page" style={{ maxWidth: '1100px' }}>
         <button onClick={() => navigate(-1)} className="btn-ghost" style={{ marginBottom: '20px', display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 8px' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
           Back
         </button>
 
-        <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', alignItems: 'start' }}>
+        <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.15fr) minmax(340px, .85fr)', gap: '40px', alignItems: 'start' }}>
 
           {/* Images */}
           <div>
@@ -153,10 +156,10 @@ const ProductDetail = () => {
           </div>
 
           {/* Details */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <Card style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '24px', position: 'sticky', top: '84px' }}>
             <div>
-              <span className="badge badge-gray" style={{ marginBottom: '8px' }}>{product.category}</span>
-              <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.25, margin: '8px 0 0' }}>
+              <Badge variant="secondary" style={{ marginBottom: '8px' }}>{product.category}</Badge>
+              <h1 style={{ fontSize: '25px', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.25, margin: '8px 0 0' }}>
                 {product.title}
               </h1>
             </div>
@@ -190,13 +193,14 @@ const ProductDetail = () => {
               </p>
             )}
 
-            <div style={{ padding: '12px 14px', background: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
-              Always meet in a safe, public place on campus. Verify the item before paying.
+            <div style={{ padding: '12px 14px', display: 'flex', gap: '9px', background: 'var(--color-bg-hover)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+              <ShieldCheck size={18} style={{ flexShrink: 0, color: 'var(--color-accent)' }} />
+              <span>Meet in a safe, public place on campus and verify the item before paying.</span>
             </div>
 
             {!isOwn && product.status === 'live' && (
-              <Button fullWidth onClick={handleInterest} loading={interested}>
-                I'm Interested — Contact Seller
+              <Button size="lg" style={{ width: '100%' }} onClick={handleInterest} disabled={interested}>
+                {interested ? 'Opening seller details…' : "I'm Interested — Contact Seller"}
               </Button>
             )}
 
@@ -206,7 +210,7 @@ const ProductDetail = () => {
                 <a href="/dashboard" style={{ color: 'var(--color-success)', fontWeight: 600 }}>Manage it in My Listings →</a>
               </div>
             )}
-          </div>
+          </Card>
         </div>
       </div>
     </>

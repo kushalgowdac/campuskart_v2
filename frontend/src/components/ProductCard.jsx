@@ -1,5 +1,7 @@
 import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { productCardImage } from '../utils/cloudinaryImage';
 
 const PAGE_LOADED_AT = Date.now();
@@ -74,7 +76,7 @@ const ProductCard = memo(({ product }) => {
         }
       `}</style>
 
-      <div
+      <Card
         className="product-card"
         onClick={() => navigate(`/product/${product.id}`)}
         role="button"
@@ -105,7 +107,7 @@ const ProductCard = memo(({ product }) => {
           )}
 
           {/* Category badge — overlaid on image */}
-          <span style={{
+          <Badge variant="secondary" style={{
             position: 'absolute', top: '10px', left: '10px',
             background: 'rgba(3,9,20,0.88)',
             backdropFilter: 'blur(8px)',
@@ -115,7 +117,7 @@ const ProductCard = memo(({ product }) => {
             border: '1px solid var(--color-border-strong)',
           }}>
             {product.category}
-          </span>
+          </Badge>
         </div>
 
         {/* Card body */}
@@ -149,7 +151,7 @@ const ProductCard = memo(({ product }) => {
             </span>
           </div>
         </div>
-      </div>
+      </Card>
     </>
   );
 });
