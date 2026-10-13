@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { supabase } from '../context/AuthContext';
+import { Link, Navigate } from 'react-router-dom';
+import { supabase, useAuth } from '../context/AuthContext';
 import { BUYER_STEPS, SELLER_STEPS } from '../content/marketplaceGuide';
 import SplitText from '../components/SplitText';
 
@@ -62,6 +62,7 @@ const GuidanceCard = ({ label, title, steps }) => (
 );
 
 const Welcome = () => {
+  const { isLoggedIn } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [introStage, setIntroStage] = useState('welcome');
@@ -89,6 +90,9 @@ const Welcome = () => {
       setLoading(false);
     }
   };
+
+  // Returning students skip the intro entirely and land on the listings.
+  if (isLoggedIn) return <Navigate to="/browse" replace />;
 
   if (introStage !== 'content') {
     const isWelcome = introStage === 'welcome';
