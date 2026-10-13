@@ -201,7 +201,7 @@ const Browse = () => {
         .gallery-toolbar select, .gallery-toolbar button, .gallery-toolbar a { padding: 0 0 3px; border: 0; border-bottom: 1px solid transparent; border-radius: 0; background: #050505; color: #aaa; font: inherit; font-size: 10px; letter-spacing: .07em; text-decoration: none; text-transform: uppercase; cursor: pointer; }
         .gallery-toolbar select:hover, .gallery-toolbar button:hover, .gallery-toolbar a:hover { color: #fff; border-bottom-color: #888; }
         .gallery-toolbar button:disabled { opacity: .45; cursor: wait; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: clamp(62px, 8vw, 138px); row-gap: 102px; padding-top: 24px; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: clamp(28px, 3.5vw, 72px); row-gap: 84px; padding-top: 24px; }
         .gallery-product { min-width: 0; display: flex; flex-direction: column; align-items: center; color: #f4f4f4; text-decoration: none; }
         .gallery-product-visual { width: 100%; height: clamp(235px, 24vw, 316px); display: grid; place-items: center; }
         .gallery-product-visual img { width: 100%; height: 100%; object-fit: contain; transition: transform .32s cubic-bezier(.2,.7,.2,1); }
@@ -237,8 +237,8 @@ const Browse = () => {
           .gallery-product-copy h3 { font-size: 13px; }
         }
         @media (max-width: 360px) {
-          .gallery-grid { grid-template-columns: 1fr; }
-          .gallery-product-visual, .gallery-skeleton-image { height: 270px; }
+          .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; }
+          .gallery-product-visual, .gallery-skeleton-image { height: 44vw; }
         }
       `}</style>
 

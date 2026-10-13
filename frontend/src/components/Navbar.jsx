@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Search, X } from 'lucide-react';
+import { Menu, Search, X, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from './ThemeToggle';
 import api from '../api';
 
 const MENU_LINKS = [
@@ -19,10 +20,26 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const searchInputRef = useRef(null);
+  const lastScrollY = useRef(0);
   const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [navHidden, setNavHidden] = useState(false);
+
+  useEffect(() => {
+    lastScrollY.current = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const delta = y - lastScrollY.current;
+      if (y <= 12) setNavHidden(false);
+      else if (delta > 3) setNavHidden(true);
+      else if (delta < -3) setNavHidden(false);
+      lastScrollY.current = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const urlQuery = new URLSearchParams(location.search).get('q') || '';
@@ -91,6 +108,11 @@ const Navbar = () => {
     navigate('/');
   };
 
+  const goBack = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/browse');
+  };
+
   const isActive = target => {
     if (!target.startsWith('/browse')) return location.pathname === target;
     if (location.pathname !== '/browse') return false;
@@ -105,8 +127,13 @@ const Navbar = () => {
         .minimal-nav-spacer { height: 72px; }
         .minimal-nav { position: fixed; inset: 0; z-index: 1000; pointer-events: none; font-family: var(--font-sans); }
         .minimal-nav-bar, .minimal-nav-panel { width: min(576px, calc(100vw - 32px)); background: #080808; color: #f5f5f5; border: 1px solid #262626; border-radius: 9px; }
-        .minimal-nav-bar { position: absolute; top: 8px; left: 50%; height: 48px; transform: translateX(-50%); display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; pointer-events: auto; box-shadow: 0 10px 35px rgba(0,0,0,.35); }
-        .minimal-nav-brand { justify-self: center; color: inherit; text-decoration: none; font-size: 13px; font-weight: 610; letter-spacing: .13em; text-transform: uppercase; }
+        .minimal-nav-bar { position: absolute; top: 8px; left: 50%; height: 48px; transform: translateX(-50%); display: grid; grid-template-columns: auto 1fr auto; align-items: center; pointer-events: auto; box-shadow: 0 10px 35px rgba(0,0,0,.35); transition: transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease; }
+        .minimal-nav-bar.is-hidden { transform: translate(-50%, -150%); opacity: 0; pointer-events: none; }
+        .minimal-nav-left, .minimal-nav-right { display: flex; align-items: center; }
+        .minimal-nav-left { justify-self: start; }
+        .minimal-nav-right { justify-self: end; }
+        .minimal-nav-brand { justify-self: center; color: inherit; text-decoration: none; font-size: 16px; font-weight: 610; letter-spacing: .13em; text-transform: uppercase; transition: font-size .3s ease, opacity .3s ease, letter-spacing .3s ease; }
+        .minimal-nav-bar.is-hidden .minimal-nav-brand { font-size: 11px; opacity: 0; letter-spacing: .2em; }
         .minimal-nav-icon { width: 48px; height: 48px; display: grid; place-items: center; border: 0; background: transparent; color: #858585; cursor: pointer; }
         .minimal-nav-icon:hover { color: #f5f5f5; }
         .minimal-nav-icon:focus-visible, .minimal-menu-link:focus-visible, .minimal-menu-footer a:focus-visible, .minimal-menu-footer button:focus-visible { outline: 1px solid #f5f5f5; outline-offset: -4px; }
@@ -141,21 +168,30 @@ const Navbar = () => {
         }
         @media (prefers-reduced-motion: reduce) {
           .minimal-nav-backdrop, .minimal-nav-panel { animation: none; }
+          .minimal-nav-bar, .minimal-nav-brand { transition: none; }
         }
       `}</style>
 
       <div className="minimal-nav-spacer" aria-hidden="true" />
       <header className="minimal-nav">
         {!menuOpen && (
-          <div className="minimal-nav-bar">
-            <button className="minimal-nav-icon" type="button" onClick={() => openMenu()} aria-label="Open navigation menu">
-              <Menu size={17} strokeWidth={1.4} />
-            </button>
+          <div className={`minimal-nav-bar${navHidden ? ' is-hidden' : ''}`}>
+            <div className="minimal-nav-left">
+              <button className="minimal-nav-icon" type="button" onClick={goBack} aria-label="Go back">
+                <ArrowLeft size={18} strokeWidth={1.4} />
+              </button>
+              <button className="minimal-nav-icon" type="button" onClick={() => openMenu()} aria-label="Open navigation menu">
+                <Menu size={17} strokeWidth={1.4} />
+              </button>
+            </div>
             <Link to="/browse" className="minimal-nav-brand">CampusKart</Link>
-            <button className="minimal-nav-icon minimal-search-button" type="button" onClick={() => openMenu({ focusSearch: true })} aria-label="Search products">
-              <Search size={16} strokeWidth={1.4} />
-              {unreadCount > 0 && <span className="minimal-notification-dot">{unreadCount > 9 ? '9+' : unreadCount}</span>}
-            </button>
+            <div className="minimal-nav-right">
+              <ThemeToggle />
+              <button className="minimal-nav-icon minimal-search-button" type="button" onClick={() => openMenu({ focusSearch: true })} aria-label="Search products">
+                <Search size={19} strokeWidth={1.4} />
+                {unreadCount > 0 && <span className="minimal-notification-dot">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+              </button>
+            </div>
           </div>
         )}
 
@@ -173,7 +209,7 @@ const Navbar = () => {
 
               <div className="minimal-menu-search">
                 <form role="search" onSubmit={submitSearch}>
-                  <Search size={14} strokeWidth={1.4} />
+                  <Search size={16} strokeWidth={1.4} />
                   <input ref={searchInputRef} value={query} onChange={event => setQuery(event.target.value)} placeholder="Search products" aria-label="Search products" />
                 </form>
               </div>

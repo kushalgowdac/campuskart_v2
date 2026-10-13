@@ -132,7 +132,7 @@ button,
 input,
 textarea,
 select {
-  color-scheme: dark;
+  color-scheme: inherit;
 }
 
 /* ── Shared component classes ────────────────────────────────
@@ -423,6 +423,109 @@ select {
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+
+/* ── Light theme ─────────────────────────────────────────────
+   The app ships dark by default (see :root). Adding `light` to the
+   <html> element flips every design token + shadcn variable, and the
+   component overrides below restyle the few surfaces that were
+   authored with fixed dark colors. */
+.light {
+  color-scheme: light;
+  --color-text-primary:   #0b0b0b;
+  --color-text-secondary: #4a4a4a;
+  --color-text-muted:     #7a7a7a;
+
+  --color-bg-primary:     #f5f5f5;
+  --color-bg-subtle:      #ffffff;
+  --color-bg-hover:       #ececec;
+
+  --color-border:         #dedede;
+  --color-border-strong:  #b8b8b8;
+
+  --color-accent:         #111111;
+  --color-accent-subtle:  #e7e7e7;
+
+  --color-danger:         #b0242f;
+  --color-danger-subtle:  #fbe9eb;
+
+  --color-warning:        #8a6a14;
+  --color-warning-subtle: #fbf3da;
+
+  --color-success:        #1c7a49;
+  --color-success-subtle: #e6f5ec;
+
+  --background: #f5f5f5;
+  --foreground: #0b0b0b;
+  --card: #ffffff;
+  --card-foreground: #0b0b0b;
+  --popover: #ffffff;
+  --popover-foreground: #0b0b0b;
+  --primary: #111111;
+  --primary-foreground: #ffffff;
+  --secondary: #e8e8e8;
+  --secondary-foreground: #111111;
+  --muted: #e8e8e8;
+  --muted-foreground: #6a6a6a;
+  --accent: #e8e8e8;
+  --accent-foreground: #111111;
+  --destructive: #d11a2a;
+  --border: #dedede;
+  --input: #dedede;
+  --ring: #111111;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.08);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.10);
+  --shadow-lg: 0 18px 48px rgba(0,0,0,0.14);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0b0b0b;
+  --sidebar-primary: #111111;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8e8e8;
+  --sidebar-accent-foreground: #111111;
+  --sidebar-border: #dedede;
+  --sidebar-ring: #111111;
+}
+
+/* ── Navbar light-mode overrides ────────────────────────────── */
+.light .minimal-nav-bar,
+.light .minimal-nav-panel { background: #ffffff; color: #111111; border-color: #e4e4e4; }
+.light .minimal-nav-icon { color: #5a5a5a; }
+.light .minimal-nav-icon:hover { color: #111111; }
+.light .minimal-notification-dot { background: #111111; color: #ffffff; }
+.light .minimal-menu-search svg { color: #8a8a8a; }
+.light .minimal-menu-search input { color: #111111; border-bottom-color: #d5d5d5; }
+.light .minimal-menu-search input::placeholder { color: #9a9a9a; }
+.light .minimal-menu-search input:focus { border-bottom-color: #555555; }
+.light .minimal-menu-link { color: #111111; }
+.light .minimal-menu-link:hover, .light .minimal-menu-link.active { color: #767676; }
+.light .minimal-menu-footer a, .light .minimal-menu-footer button { color: #666666; }
+
+/* ── Browse / gallery light-mode overrides ──────────────────── */
+.light body.browse-gallery-page { background: #f5f5f5; color: #111111; }
+.light body.browse-gallery-page .minimal-nav-spacer { background: #f5f5f5; }
+.light .browse-shell { color: #111111; background-color: #f5f5f5; background-image: radial-gradient(circle, rgba(0,0,0,.16) 1px, transparent 1.35px); }
+.light .gallery-search-note { color: #666666; }
+.light .gallery-search-note button { color: #111111; }
+.light .gallery-toolbar { color: #555555; }
+.light .gallery-toolbar select, .light .gallery-toolbar button, .light .gallery-toolbar a { background: #f5f5f5; color: #555555; }
+.light .gallery-toolbar select:hover, .light .gallery-toolbar button:hover, .light .gallery-toolbar a:hover { color: #111111; border-bottom-color: #888888; }
+.light .gallery-product { color: #111111; }
+.light .gallery-product-copy h3 { color: #111111; }
+.light .gallery-product-copy p { color: #777777; }
+.light .gallery-product-placeholder { border-color: rgba(0,0,0,.15); color: #888888; }
+.light .gallery-skeleton-image { background: #e6e6e6; }
+.light .gallery-skeleton-copy > * { background: #e0e0e0; }
+.light .gallery-message { color: #666666; }
+.light .gallery-message-title { color: #111111; }
+.light .gallery-message button, .light .gallery-load-more { color: #111111; border-bottom-color: #111111; }
+.light .gallery-error { border-color: #e0aeb4; color: #a33540; }
+
+/* ── Circular nav light-mode overrides ──────────────────────── */
+.light .circular-nav-item { color: #444444; }
+.light .circular-nav-item:hover { color: #000000; }
+.light .circular-nav-item-icon { border-color: #dcdcdc; background: rgba(255,255,255,.94); box-shadow: 0 10px 30px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.6); }
+.light .circular-nav-item:hover .circular-nav-item-icon { border-color: #999999; background: #f0f0f0; }
+.light .circular-nav-badge { border-color: #ffffff; background: #111111; color: #ffffff; }
+.light .circular-nav-trigger { border-color: rgba(0,0,0,.16); box-shadow: 0 8px 26px rgba(0,0,0,.18); }
 
 @layer base {
   * {

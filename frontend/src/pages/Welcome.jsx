@@ -152,6 +152,7 @@ const Welcome = () => {
         .landing-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
         .landing-access { margin-top: 15px; color: #676767; font-size: 12px; line-height: 1.5; }
         .landing-access strong { color: #a5a5a5; }
+        .landing-cta { min-height: 52px; padding: 0 32px; font-size: 17px; font-weight: 600; line-height: 1.2; border-radius: 1.15rem; }
         .landing-error { max-width: 550px; margin-top: 14px; padding: 10px 12px; border: 1px solid #7f3540; border-radius: 6px; background: rgba(127,53,64,0.16); color: #ffb7c0; font-size: 13px; }
         .landing-art { position: relative; width: 110%; margin-left: -8%; }
         .welcome-signal { display: block; width: 100%; height: auto; filter: drop-shadow(0 0 22px rgba(255,255,255,0.04)); }
@@ -196,6 +197,7 @@ const Welcome = () => {
           .landing-copy > p { margin-top: 22px; font-size: 15px; }
           .landing-hero-actions { flex-direction: column; }
           .landing-hero-actions .landing-button { width: 100%; }
+          .landing-cta { width: 100%; padding: 0 20px; }
           .landing-art { width: 125%; margin-left: -12%; }
           .landing-guide-inner { width: calc(100% - 32px); padding: 68px 0 72px; }
           .landing-guide-grid { grid-template-columns: 1fr; }
@@ -232,14 +234,14 @@ const Welcome = () => {
                 type="button"
                 onClick={signInWithGoogle}
                 disabled={loading}
-                className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md bg-white/95 hover:bg-white text-black transition-all duration-300 hover:-translate-y-0.5 border border-white/20 disabled:opacity-60"
+                className="landing-cta inline-flex items-center justify-center h-auto backdrop-blur-md bg-white/95 hover:bg-white text-black transition-all duration-300 hover:-translate-y-0.5 border border-white/20 disabled:opacity-60"
               >
                 {loading ? 'Redirecting…' : 'Sign in with Google'}
               </Button>
               <Button
                 asChild
                 variant="ghost"
-                className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md bg-black/60 hover:bg-black text-white transition-all duration-300 hover:-translate-y-0.5 border border-white/20"
+                className="landing-cta inline-flex items-center justify-center h-auto backdrop-blur-md bg-black/60 hover:bg-black text-white transition-all duration-300 hover:-translate-y-0.5 border border-white/20"
               >
                 <Link to="/browse">
                   Browse items
