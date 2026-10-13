@@ -3,7 +3,8 @@ import { Link, Navigate } from 'react-router-dom';
 import { supabase, useAuth } from '../context/AuthContext';
 import { BUYER_STEPS, SELLER_STEPS } from '../content/marketplaceGuide';
 import SplitText from '../components/SplitText';
-import { BackgroundPaths } from '@/components/ui/background-paths';
+import { motion } from 'framer-motion';
+import { LampContainer } from '@/components/ui/lamp';
 import { Button } from '@/components/ui/button';
 
 const GuidanceCard = ({ label, title, steps }) => (
@@ -214,39 +215,41 @@ const Welcome = () => {
       </header>
 
       <main id="top">
-        <section className="landing-paths dark">
-          <BackgroundPaths
-            title="Buy and sell within RVCE"
-            action={
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <div className="inline-block group relative bg-gradient-to-b from-black/10 to-white/10 dark:from-white/10 dark:to-black/10 p-px rounded-2xl backdrop-blur-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    onClick={signInWithGoogle}
-                    disabled={loading}
-                    className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md bg-white/95 hover:bg-white dark:bg-black/95 dark:hover:bg-black text-black dark:text-white transition-all duration-300 group-hover:-translate-y-0.5 border border-black/10 dark:border-white/10 disabled:opacity-60"
-                  >
-                    {loading ? 'Redirecting…' : 'Sign in with Google'}
-                  </Button>
-                </div>
-                <div className="inline-block group relative bg-gradient-to-b from-black/10 to-white/10 dark:from-white/10 dark:to-black/10 p-px rounded-2xl backdrop-blur-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <Button
-                    asChild
-                    variant="ghost"
-                    className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md bg-white/95 hover:bg-white dark:bg-black/95 dark:hover:bg-black text-black dark:text-white transition-all duration-300 group-hover:-translate-y-0.5 border border-black/10 dark:border-white/10"
-                  >
-                    <Link to="/browse">
-                      Browse items
-                      <span className="ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 transition-all duration-300">
-                        →
-                      </span>
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            }
-          />
+        <section className="landing-lamp">
+          <LampContainer>
+            <motion.h1
+              initial={{ opacity: 0.5, y: 100 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.8, ease: 'easeInOut' }}
+              className="mt-8 bg-gradient-to-br from-slate-300 to-slate-500 py-4 bg-clip-text text-center text-4xl font-medium tracking-tight text-transparent md:text-7xl"
+            >
+              Welcome to <br /> CampusKart RVCE
+            </motion.h1>
+
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={signInWithGoogle}
+                disabled={loading}
+                className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md bg-white/95 hover:bg-white text-black transition-all duration-300 hover:-translate-y-0.5 border border-white/20 disabled:opacity-60"
+              >
+                {loading ? 'Redirecting…' : 'Sign in with Google'}
+              </Button>
+              <Button
+                asChild
+                variant="ghost"
+                className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md bg-black/60 hover:bg-black text-white transition-all duration-300 hover:-translate-y-0.5 border border-white/20"
+              >
+                <Link to="/browse">
+                  Browse items
+                  <span className="ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 transition-all duration-300">
+                    →
+                  </span>
+                </Link>
+              </Button>
+            </div>
+          </LampContainer>
         </section>
 
         <section className="landing-guide" id="how-it-works">
