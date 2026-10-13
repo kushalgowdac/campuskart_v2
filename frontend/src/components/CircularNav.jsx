@@ -77,12 +77,16 @@ const CircularNav = () => {
         .circular-nav-item:hover .circular-nav-item-icon { border-color: #777; background: #141414; transform: translateY(-2px); }
         .circular-nav-item-label { font-size: 9px; font-weight: 650; letter-spacing: .09em; text-transform: uppercase; white-space: nowrap; }
         .circular-nav-badge { position: absolute; top: -3px; right: -3px; min-width: 18px; height: 18px; padding: 0 4px; display: grid; place-items: center; border: 2px solid #090909; border-radius: 999px; background: #f4f4f4; color: #090909; font-size: 8px; font-weight: 800; }
-        .circular-nav-trigger { position: absolute; bottom: 22px; left: 50%; min-width: 108px; height: 46px; padding: 0 17px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid #303030; border-radius: 999px; background: rgba(10,10,10,.88); color: #a5a5a5; box-shadow: 0 7px 28px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05); backdrop-filter: blur(18px); transform: translateX(-50%); pointer-events: auto; cursor: pointer; transition: color .2s ease, border-color .2s ease, transform .2s ease, background .2s ease; }
-        .circular-nav-trigger:hover { color: #fff; border-color: #555; background: rgba(18,18,18,.94); transform: translateX(-50%) translateY(-2px); }
-        .circular-nav-trigger span { font-size: 10px; font-weight: 650; letter-spacing: .2em; text-transform: uppercase; }
-        .circular-nav-trigger svg { transition: transform .28s ease; }
-        .circular-nav-layer.open .circular-nav-trigger { color: #f4f4f4; border-color: #555; }
+        .circular-nav-trigger { position: absolute; bottom: 22px; left: 50%; width: 58px; height: 58px; padding: 0; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.28); border-radius: 50%; background: radial-gradient(circle at 50% 30%, #ffffff 0%, #efefef 15%, #a8a8a8 36%, #3d3d3d 64%, #070707 100%); color: #0a0a0a; box-shadow: 0 0 16px rgba(255,255,255,.42), 0 0 48px rgba(255,255,255,.22), 0 8px 26px rgba(0,0,0,.55), inset 0 1px 2px rgba(255,255,255,.75); transform: translateX(-50%); pointer-events: auto; cursor: pointer; animation: circularNavGlow 3.2s ease-in-out infinite; transition: transform .2s ease, filter .2s ease; }
+        .circular-nav-trigger:hover { transform: translateX(-50%) translateY(-2px) scale(1.05); filter: brightness(1.08); }
+        .circular-nav-trigger span { display: none; }
+        .circular-nav-trigger svg { position: relative; z-index: 1; transition: transform .28s ease; }
+        .circular-nav-layer.open .circular-nav-trigger { color: #0a0a0a; border-color: rgba(255,255,255,.45); }
         .circular-nav-trigger:focus-visible, .circular-nav-item:focus-visible .circular-nav-item-icon { outline: 1px solid #f4f4f4; outline-offset: 3px; }
+        @keyframes circularNavGlow {
+          0%, 100% { box-shadow: 0 0 13px rgba(255,255,255,.32), 0 0 40px rgba(255,255,255,.15), 0 8px 26px rgba(0,0,0,.55), inset 0 1px 2px rgba(255,255,255,.7); }
+          50% { box-shadow: 0 0 26px rgba(255,255,255,.85), 0 0 80px rgba(255,255,255,.4), 0 8px 26px rgba(0,0,0,.55), inset 0 1px 2px rgba(255,255,255,.9); }
+        }
         @media (max-width: 520px) {
           .circular-nav-item { width: 72px; }
           .circular-nav-item:nth-of-type(2) { --item-x: -122px !important; --item-y: -86px !important; }
@@ -94,7 +98,7 @@ const CircularNav = () => {
           .circular-nav-item-label { font-size: 8px; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .circular-nav-backdrop, .circular-nav-item, .circular-nav-trigger, .circular-nav-trigger svg { transition: none; }
+          .circular-nav-backdrop, .circular-nav-item, .circular-nav-trigger, .circular-nav-trigger svg { transition: none; animation: none; }
         }
       `}</style>
 
