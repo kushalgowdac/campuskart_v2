@@ -152,7 +152,7 @@ const Welcome = () => {
         .landing-access { margin-top: 15px; color: #676767; font-size: 12px; line-height: 1.5; }
         .landing-access strong { color: #a5a5a5; }
         .landing-cta { min-height: 52px; padding: 0 32px; font-size: 17px; font-weight: 600; line-height: 1.2; border-radius: 1.15rem; }
-        .landing-cta-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; margin-top: 12px; }
+        .landing-cta-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; margin-top: 50px; }
         .landing-error { max-width: 550px; margin-top: 14px; padding: 10px 12px; border: 1px solid #7f3540; border-radius: 6px; background: rgba(127,53,64,0.16); color: #ffb7c0; font-size: 13px; }
         .landing-art { position: relative; width: 110%; margin-left: -8%; }
         .welcome-signal { display: block; width: 100%; height: auto; filter: drop-shadow(0 0 22px rgba(255,255,255,0.04)); }
@@ -198,7 +198,7 @@ const Welcome = () => {
           .landing-hero-actions { flex-direction: column; }
           .landing-hero-actions .landing-button { width: 100%; }
           .landing-cta { width: 100%; padding: 0 20px; }
-          .landing-cta-row { margin-top: 10px; }
+          .landing-cta-row { margin-top: 36px; }
           .landing-art { width: 125%; margin-left: -12%; }
           .landing-guide-inner { width: calc(100% - 32px); padding: 68px 0 72px; }
           .landing-guide-grid { grid-template-columns: 1fr; }
