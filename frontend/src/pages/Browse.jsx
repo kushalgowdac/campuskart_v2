@@ -19,12 +19,11 @@ const normalizeProductsPage = (data) => Array.isArray(data)
 // Skeleton card shows the SHAPE of a product card while data loads.
 // Better UX than "Loading..." text — user sees layout immediately.
 const SkeletonCard = () => (
-  <div className="card" style={{ overflow: 'hidden' }}>
-    <Skeleton style={{ aspectRatio: '4/3', width: '100%' }} />
-    <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <Skeleton style={{ height: '14px', width: '75%' }} />
-      <Skeleton style={{ height: '18px', width: '40%' }} />
-      <Skeleton style={{ height: '12px', width: '60%', marginTop: '4px' }} />
+  <div className="gallery-skeleton">
+    <Skeleton className="gallery-skeleton-image" />
+    <div className="gallery-skeleton-copy">
+      <Skeleton style={{ height: '12px', width: '58%' }} />
+      <Skeleton style={{ height: '10px', width: '28%' }} />
     </div>
   </div>
 );
@@ -53,6 +52,11 @@ const Browse = () => {
       setCategory(CATEGORIES.includes(requestedCategory) ? requestedCategory : 'All');
     });
   }, [searchParams]);
+
+  useEffect(() => {
+    document.body.classList.add('browse-gallery-page');
+    return () => document.body.classList.remove('browse-gallery-page');
+  }, []);
 
   // useCallback: memoize this function so it has a stable reference
   // across renders, unless appliedSearch/category/sort actually change.
@@ -183,20 +187,69 @@ const Browse = () => {
   return (
     <>
       <style>{`
-        .filter-bar { position: sticky; top: 110px; z-index: 90; background: rgba(3,9,20,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--color-border); }
-        .filter-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .srt { padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 13px; font-family: var(--font-sans); background: var(--color-bg-subtle); color: var(--color-text-secondary); cursor: pointer; outline: none; }
-        @media (max-width: 600px) {
-          .filter-bar { top: 154px; }
-          .filter-controls { align-items: stretch; }
-          .filter-label { flex-basis: 100%; }
+        body.browse-gallery-page { background: #f3f3f3; color: #111; }
+        body.browse-gallery-page .minimal-nav-spacer { background: #f3f3f3; }
+        .browse-shell { min-height: calc(100vh - 72px); color: #111; background-color: #f3f3f3; background-image: radial-gradient(circle, rgba(94,94,94,.42) 1px, transparent 1.35px); background-size: 144px 144px; background-position: 31px 32px; }
+        .gallery-page { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 31px 0 90px; }
+        .gallery-heading { text-align: center; }
+        .gallery-heading h1 { margin: 0; font-family: 'Courier New', monospace; font-size: clamp(31px, 3.2vw, 43px); font-weight: 700; line-height: 1; letter-spacing: -.075em; text-transform: uppercase; }
+        .gallery-search-note { margin-top: 9px; color: #555; font-size: 12px; }
+        .gallery-search-note button { margin-left: 4px; padding: 0; border: 0; background: none; color: #111; font: inherit; text-decoration: underline; cursor: pointer; }
+        .gallery-toolbar { min-height: 62px; margin-top: 22px; display: flex; align-items: center; justify-content: flex-end; gap: 18px; color: #333; }
+        .gallery-toolbar-count { margin-right: auto; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+        .gallery-toolbar select, .gallery-toolbar button, .gallery-toolbar a { padding: 0 0 3px; border: 0; border-bottom: 1px solid transparent; border-radius: 0; background: transparent; color: #222; font: inherit; font-size: 10px; letter-spacing: .07em; text-decoration: none; text-transform: uppercase; cursor: pointer; }
+        .gallery-toolbar select:hover, .gallery-toolbar button:hover, .gallery-toolbar a:hover { border-bottom-color: #222; }
+        .gallery-toolbar button:disabled { opacity: .45; cursor: wait; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: clamp(62px, 8vw, 138px); row-gap: 102px; padding-top: 24px; }
+        .gallery-product { min-width: 0; display: flex; flex-direction: column; align-items: center; color: #111; text-decoration: none; }
+        .gallery-product-visual { width: 100%; height: clamp(235px, 24vw, 316px); display: grid; place-items: center; }
+        .gallery-product-visual img { width: 100%; height: 100%; object-fit: contain; transition: transform .32s cubic-bezier(.2,.7,.2,1); }
+        .gallery-product:hover .gallery-product-visual img { transform: scale(1.035); }
+        .gallery-product-placeholder { width: 62%; height: 72%; display: grid; place-items: center; border: 1px solid rgba(0,0,0,.12); color: #8b8b8b; }
+        .gallery-product-copy { max-width: 100%; margin-top: 15px; text-align: center; }
+        .gallery-product-copy h3 { max-width: 100%; margin: 0; overflow: hidden; color: #171717; font-family: Georgia, 'Times New Roman', serif; font-size: 15px; font-weight: 400; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+        .gallery-product-copy p { margin: 5px 0 0; color: #666; font-size: 11px; font-variant-numeric: tabular-nums; }
+        .gallery-skeleton { display: flex; flex-direction: column; align-items: center; }
+        .gallery-skeleton-image { width: 72%; height: clamp(235px, 24vw, 316px); border-radius: 2px; background: #dedede; }
+        .gallery-skeleton-copy { width: 60%; margin-top: 16px; display: grid; justify-items: center; gap: 7px; }
+        .gallery-skeleton-copy > * { background: #d8d8d8; }
+        .gallery-message { max-width: 560px; margin: 70px auto 0; padding: 36px 28px; text-align: center; color: #555; }
+        .gallery-message svg { margin: 0 auto; display: block; }
+        .gallery-message-title { margin: 15px 0 6px; color: #111; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; }
+        .gallery-message p { margin: 0 0 20px; font-size: 13px; }
+        .gallery-message button, .gallery-load-more { padding: 8px 0 4px; border: 0; border-bottom: 1px solid #111; background: transparent; color: #111; font: inherit; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+        .gallery-error { max-width: 520px; margin: 35px auto; padding: 16px; border: 1px solid #ac7777; color: #6c1f1f; text-align: center; font-size: 13px; }
+        .gallery-error button { margin-left: 15px; border: 0; border-bottom: 1px solid currentColor; background: none; color: inherit; cursor: pointer; }
+        .gallery-load-wrap { display: flex; justify-content: center; margin-top: 70px; }
+        @media (max-width: 800px) {
+          .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 38px; row-gap: 72px; }
+          .gallery-product-visual, .gallery-skeleton-image { height: min(43vw, 310px); }
+        }
+        @media (max-width: 560px) {
+          .browse-shell { background-size: 96px 96px; background-position: 20px 20px; }
+          .gallery-page { width: calc(100% - 28px); padding-top: 24px; }
+          .gallery-toolbar { min-height: 76px; gap: 10px 14px; flex-wrap: wrap; justify-content: center; }
+          .gallery-toolbar-count { width: 100%; margin-right: 0; text-align: center; }
+          .gallery-grid { column-gap: 18px; row-gap: 52px; padding-top: 14px; }
+          .gallery-product-visual, .gallery-skeleton-image { height: 47vw; }
+          .gallery-product-copy { margin-top: 10px; }
+          .gallery-product-copy h3 { font-size: 13px; }
+        }
+        @media (max-width: 360px) {
+          .gallery-grid { grid-template-columns: 1fr; }
+          .gallery-product-visual, .gallery-skeleton-image { height: 270px; }
         }
       `}</style>
 
-      <div className="filter-bar">
-        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '12px 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div className="filter-controls">
-            <span className="filter-label" style={{ marginRight: 'auto', color: 'var(--color-text-secondary)', fontSize: '13px', fontWeight: 650 }}>Browse products</span>
+      <main className="browse-shell">
+        <div className="gallery-page">
+          <header className="gallery-heading">
+            <h1>{category === 'All' ? 'Products' : category}</h1>
+            {appliedSearch && <p className="gallery-search-note">Results for “{appliedSearch}” <button type="button" onClick={clearSearch}>Clear</button></p>}
+          </header>
+
+          <div className="gallery-toolbar" aria-label="Product controls">
+            {!loading && <span className="gallery-toolbar-count">{products.length === 0 ? 'No listings' : `${products.length} item${products.length === 1 ? '' : 's'}`}</span>}
             <select className="srt" value={sort} onChange={e => setSort(e.target.value)}>
               <option value="">Newest</option>
               <option value="price_asc">Price ↑</option>
@@ -204,70 +257,52 @@ const Browse = () => {
             </select>
             <button
               type="button"
-              className="btn-secondary"
               onClick={() => fetchProducts({ force: true })}
               disabled={refreshing}
-              style={{ padding: '9px 12px', fontSize: '13px' }}
               title={lastUpdated ? `Last updated ${new Date(lastUpdated).toLocaleTimeString()}` : 'Fetch the latest listings'}
             >
-              {refreshing ? 'Refreshing…' : '↻ Refresh listings'}
+              {refreshing ? 'Refreshing…' : 'Refresh'}
             </button>
-            <Link to="/closed-deals" className="btn-secondary" style={{ padding: '9px 12px', fontSize: '13px' }}>
-              Closed deals
-            </Link>
-            <Link to="/sell" className="btn-primary" style={{ padding: '9px 16px', fontSize: '13px' }}>+ List item</Link>
+            <Link to="/closed-deals">Closed deals</Link>
+            <Link to="/sell">List item +</Link>
           </div>
-        </div>
-      </div>
-
-      <div className="page">
-        {!loading && (
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-            <div>
-              <h2 style={{ margin: 0, fontSize: '22px', letterSpacing: '-0.03em' }}>{category === 'All' ? 'Latest listings' : category}</h2>
-              {appliedSearch && <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>Results for "<strong>{appliedSearch}</strong>" <button onClick={clearSearch} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}>×</button></span>}
-            </div>
-            <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-text-muted)' }}>{products.length === 0 ? 'No listings found' : `${products.length} listing${products.length !== 1 ? 's' : ''}`}</p>
-          </div>
-        )}
 
         {error && (
-          <div style={{ padding: '16px', background: 'var(--color-danger-subtle)', border: '1px solid #70313c', borderRadius: 'var(--radius-md)', color: 'var(--color-danger)', fontSize: '14px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <div className="gallery-error">
             {error}
-            <button onClick={() => fetchProducts({ force: true })} className="btn-secondary" style={{ fontSize: '12px', padding: '5px 10px' }}>Retry</button>
+            <button type="button" onClick={() => fetchProducts({ force: true })}>Retry</button>
           </div>
         )}
 
         {loading && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
-            {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
+          <div className="gallery-grid">
+            {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         )}
 
         {!loading && !error && products.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '80px 24px', color: 'var(--color-text-muted)' }}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto', display: 'block' }}>
+          <div className="gallery-message">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
               <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
             </svg>
-            <p style={{ fontSize: '16px', fontWeight: 500, color: 'var(--color-text-secondary)', margin: '16px 0 8px' }}>Nothing here yet</p>
-            <p style={{ fontSize: '14px', margin: '0 0 24px' }}>{appliedSearch || category !== 'All' ? 'Try different terms or clear filters' : 'Be the first to list something'}</p>
-            {(appliedSearch || category !== 'All') && <button onClick={clearFilters} className="btn-secondary">Clear filters</button>}
+            <div className="gallery-message-title">Nothing here yet</div>
+            <p>{appliedSearch || category !== 'All' ? 'Try different terms or clear filters.' : 'Be the first to list something.'}</p>
+            {(appliedSearch || category !== 'All') && <button type="button" onClick={clearFilters}>Clear filters</button>}
           </div>
         )}
 
         {!loading && products.length > 0 && (
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
+            <div className="gallery-grid">
               {products.map(product => <ProductCard key={product.id} product={product} />)}
             </div>
             {nextCursor && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
+              <div className="gallery-load-wrap">
                 <button
                   type="button"
-                  className="btn-secondary"
+                  className="gallery-load-more"
                   disabled={loadingMore}
                   onClick={loadMoreProducts}
-                  style={{ minWidth: '140px' }}
                 >
                   {loadingMore ? 'Loading…' : 'Load more'}
                 </button>
@@ -275,7 +310,8 @@ const Browse = () => {
             )}
           </>
         )}
-      </div>
+        </div>
+      </main>
     </>
   );
 };

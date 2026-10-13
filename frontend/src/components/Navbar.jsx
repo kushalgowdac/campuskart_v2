@@ -1,42 +1,46 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BookOpen, Dumbbell, Grid3X3, Laptop, Menu, PackagePlus, Pencil, Search, Shirt, ShoppingBag, UserRound, X } from 'lucide-react';
+import { Menu, Search, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
-const CATEGORIES = [
-  ['All', Grid3X3],
-  ['Books', BookOpen],
-  ['Electronics', Laptop],
-  ['Clothing', Shirt],
-  ['Stationery', Pencil],
-  ['Sports', Dumbbell],
+const MENU_LINKS = [
+  ['Shop all', '/browse'],
+  ['Books', '/browse?category=Books'],
+  ['Electronics', '/browse?category=Electronics'],
+  ['Clothing', '/browse?category=Clothing'],
+  ['Stationery', '/browse?category=Stationery'],
+  ['Sports', '/browse?category=Sports'],
+  ['Other', '/browse?category=Other'],
 ];
 
 const Navbar = () => {
   const { user, isLoggedIn, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const searchInputRef = useRef(null);
   const [query, setQuery] = useState('');
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const urlQuery = new URLSearchParams(location.search).get('q') || '';
     Promise.resolve().then(() => {
       setQuery(urlQuery);
-      setMobileOpen(false);
+      setMenuOpen(false);
+      setSearchOpen(false);
     });
   }, [location.pathname, location.search]);
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) return undefined;
     const fetchUnread = async () => {
       try {
         const res = await api.get('/api/notifications');
         setUnreadCount(res.data.unread_count || 0);
       } catch {
-        // Navigation remains usable if the notification request fails.
+        // Navigation remains usable if notification fetching fails.
       }
     };
     fetchUnread();
@@ -44,7 +48,30 @@ const Navbar = () => {
     return () => clearInterval(interval);
   }, [isLoggedIn]);
 
-  const submitSearch = (event) => {
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const closeOnEscape = event => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
+  const openMenu = ({ focusSearch = false } = {}) => {
+    setMenuOpen(true);
+    setSearchOpen(focusSearch);
+  };
+
+  const submitSearch = event => {
     event.preventDefault();
     const value = query.trim();
     navigate(value ? `/browse?q=${encodeURIComponent(value)}` : '/browse');
@@ -55,79 +82,112 @@ const Navbar = () => {
     navigate('/');
   };
 
+  const isActive = target => {
+    if (!target.startsWith('/browse')) return location.pathname === target;
+    if (location.pathname !== '/browse') return false;
+    const targetCategory = new URLSearchParams(target.split('?')[1] || '').get('category');
+    const currentCategory = new URLSearchParams(location.search).get('category');
+    return targetCategory ? targetCategory === currentCategory : !currentCategory;
+  };
+
   return (
-    <header className="store-header">
+    <>
       <style>{`
-        .store-header { position: sticky; top: 0; z-index: 100; background: rgba(3,9,20,.98); border-bottom: 1px solid var(--color-border); backdrop-filter: blur(14px); }
-        .store-header-main { max-width: 1180px; height: 66px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; gap: 18px; }
-        .store-brand { display: inline-flex; align-items: center; gap: 9px; flex-shrink: 0; color: var(--color-text-primary); text-decoration: none; font-size: 17px; font-weight: 750; letter-spacing: -.035em; }
-        .store-brand-icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; background: var(--color-accent); color: #04101c; }
-        .store-search { position: relative; flex: 1; max-width: 620px; }
-        .store-search > svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); }
-        .store-search input { width: 100%; height: 40px; padding: 0 82px 0 40px; border: 1px solid var(--color-border-strong); border-radius: 8px; outline: none; background: var(--color-bg-subtle); color: var(--color-text-primary); font: inherit; font-size: 13px; }
-        .store-search input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(120,198,255,.1); }
-        .store-search input::placeholder { color: var(--color-text-muted); }
-        .store-search button { position: absolute; top: 4px; right: 4px; height: 32px; padding: 0 13px; border: 0; border-radius: 6px; background: var(--color-accent); color: #04101c; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
-        .store-actions { display: flex; align-items: center; gap: 5px; margin-left: auto; }
-        .store-action { min-height: 36px; padding: 0 10px; display: inline-flex; align-items: center; gap: 7px; border: 0; border-radius: 7px; background: transparent; color: var(--color-text-secondary); text-decoration: none; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .store-action:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
-        .store-action-primary { border: 1px solid var(--color-border); color: var(--color-text-primary); }
-        .store-account { display: grid; line-height: 1.05; }
-        .store-account small { color: var(--color-text-muted); font-size: 9px; font-weight: 500; }
-        .store-notification { position: relative; }
-        .store-count { position: absolute; top: 0; right: 0; min-width: 15px; height: 15px; padding: 0 3px; display: grid; place-items: center; border-radius: 999px; background: var(--color-danger); color: #24080c; font-size: 8px; font-weight: 800; }
-        .store-categories { border-top: 1px solid rgba(28,56,82,.65); background: var(--color-bg-subtle); }
-        .store-categories-inner { max-width: 1180px; height: 44px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
-        .store-categories-inner::-webkit-scrollbar { display: none; }
-        .store-category { min-width: 92px; padding: 7px 10px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; flex-shrink: 0; border-radius: 7px; color: var(--color-text-secondary); text-decoration: none; font-size: 11px; font-weight: 600; }
-        .store-category:hover { background: var(--color-bg-hover); color: var(--color-text-primary); }
-        .store-category.active { color: var(--color-accent); background: var(--color-accent-subtle); }
-        .store-category-spacer { flex: 1; }
-        .store-mobile-toggle, .store-mobile-menu { display: none; }
-        @media (max-width: 760px) {
-          .store-header-main { height: auto; min-height: 60px; padding: 9px 14px; flex-wrap: wrap; gap: 9px; }
-          .store-brand { order: 1; }
-          .store-actions { order: 2; }
-          .store-actions > :not(.store-mobile-toggle) { display: none; }
-          .store-mobile-toggle { display: inline-flex; padding: 7px; border: 0; border-radius: 7px; background: transparent; color: var(--color-text-primary); }
-          .store-search { order: 3; flex-basis: 100%; max-width: none; }
-          .store-categories-inner { padding: 0 14px; }
-          .store-mobile-menu { display: grid; padding: 6px 14px 12px; border-top: 1px solid var(--color-border); }
-          .store-mobile-menu a, .store-mobile-menu button { padding: 10px 6px; border: 0; border-bottom: 1px solid var(--color-border); background: transparent; color: var(--color-text-primary); text-align: left; text-decoration: none; font: inherit; font-size: 13px; }
+        .minimal-nav-spacer { height: 72px; }
+        .minimal-nav { position: fixed; inset: 0; z-index: 1000; pointer-events: none; font-family: var(--font-sans); }
+        .minimal-nav-bar, .minimal-nav-panel { width: min(576px, calc(100vw - 32px)); background: #f4f4f4; color: #0b0b0b; border-radius: 9px; }
+        .minimal-nav-bar { position: absolute; top: 8px; left: 50%; height: 48px; transform: translateX(-50%); display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; pointer-events: auto; box-shadow: 0 1px 0 rgba(0,0,0,.04); }
+        .minimal-nav-brand { justify-self: center; color: inherit; text-decoration: none; font-size: 13px; font-weight: 610; letter-spacing: .13em; text-transform: uppercase; }
+        .minimal-nav-icon { width: 48px; height: 48px; display: grid; place-items: center; border: 0; background: transparent; color: #575757; cursor: pointer; }
+        .minimal-nav-icon:hover { color: #050505; }
+        .minimal-nav-icon:focus-visible, .minimal-menu-link:focus-visible, .minimal-menu-footer a:focus-visible, .minimal-menu-footer button:focus-visible { outline: 1px solid #111; outline-offset: -4px; }
+        .minimal-search-button { position: relative; }
+        .minimal-notification-dot { position: absolute; top: 11px; right: 10px; min-width: 13px; height: 13px; padding: 0 3px; display: grid; place-items: center; border-radius: 20px; background: #111; color: #fff; font-size: 7px; font-weight: 700; }
+        .minimal-nav-backdrop { position: absolute; inset: 0; border: 0; background: rgba(0,0,0,.96); pointer-events: auto; cursor: default; animation: minimalFade .18s ease-out; }
+        .minimal-nav-panel { position: absolute; top: 8px; bottom: 8px; left: 50%; transform: translateX(-50%); display: grid; grid-template-rows: 48px auto 1fr auto; overflow: hidden; pointer-events: auto; animation: minimalPanelIn .22s ease-out; }
+        .minimal-menu-head { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; }
+        .minimal-menu-search { width: min(400px, calc(100% - 64px)); margin: 22px auto 0; align-self: start; }
+        .minimal-menu-search form { position: relative; }
+        .minimal-menu-search svg { position: absolute; left: 0; top: 50%; transform: translateY(-50%); color: #555; }
+        .minimal-menu-search input { width: 100%; height: 38px; padding: 0 30px; border: 0; border-bottom: 1px solid #a7a7a7; border-radius: 0; outline: 0; background: transparent; color: #111; font: inherit; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+        .minimal-menu-search input:focus { border-bottom-color: #111; }
+        .minimal-menu-nav { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(10px, 2vh, 20px); padding: 20px 24px; }
+        .minimal-menu-link { color: #0a0a0a; text-decoration: none; text-align: center; text-transform: uppercase; font-family: 'Courier New', monospace; font-size: clamp(27px, 4.2vh, 39px); font-weight: 700; line-height: .98; letter-spacing: -.075em; transition: opacity .15s ease; }
+        .minimal-menu-link:hover, .minimal-menu-link.active { opacity: .42; }
+        .minimal-menu-footer { min-height: 62px; padding: 0 28px 26px; display: flex; align-items: end; justify-content: center; flex-wrap: wrap; gap: 10px 22px; }
+        .minimal-menu-footer a, .minimal-menu-footer button { padding: 0; border: 0; background: none; color: #1e1e1e; text-decoration: none; font: inherit; font-size: 10px; line-height: 1; text-transform: uppercase; cursor: pointer; }
+        .minimal-menu-footer a:hover, .minimal-menu-footer button:hover { text-decoration: underline; }
+        @keyframes minimalFade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes minimalPanelIn { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        @media (max-height: 720px) {
+          .minimal-menu-nav { gap: 8px; }
+          .minimal-menu-link { font-size: clamp(23px, 4.5vh, 31px); }
+          .minimal-menu-search { margin-top: 8px; }
+        }
+        @media (max-width: 520px) {
+          .minimal-nav-bar, .minimal-nav-panel { width: calc(100vw - 16px); }
+          .minimal-menu-search { width: calc(100% - 48px); }
+          .minimal-menu-footer { gap: 12px 17px; padding-inline: 18px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .minimal-nav-backdrop, .minimal-nav-panel { animation: none; }
         }
       `}</style>
 
-      <div className="store-header-main">
-        <Link to="/" className="store-brand"><span className="store-brand-icon"><ShoppingBag size={17} /></span>CampusKart</Link>
-        <form className="store-search" role="search" onSubmit={submitSearch}>
-          <Search size={16} />
-          <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search products and categories" aria-label="Search products" />
-          <button type="submit">Search</button>
-        </form>
-        <div className="store-actions">
-          <Link to="/sell" className="store-action store-action-primary"><PackagePlus size={16} /> Sell</Link>
-          {isLoggedIn && <Link to="/notifications" className="store-action store-notification" aria-label="Notifications"><Bell size={17} />{unreadCount > 0 && <span className="store-count">{unreadCount > 9 ? '9+' : unreadCount}</span>}</Link>}
-          <Link to={isLoggedIn ? '/profile' : '/login'} className="store-action"><UserRound size={17} /><span className="store-account"><small>{isLoggedIn ? `Hello, ${user?.name?.split(' ')[0] || 'RVIAN'}` : 'Welcome'}</small>{isLoggedIn ? 'Account' : 'Login'}</span></Link>
-          <button type="button" className="store-mobile-toggle" onClick={() => setMobileOpen(open => !open)} aria-label="Toggle navigation">{mobileOpen ? <X size={20} /> : <Menu size={20} />}</button>
-        </div>
-      </div>
+      <div className="minimal-nav-spacer" aria-hidden="true" />
+      <header className="minimal-nav">
+        {!menuOpen && (
+          <div className="minimal-nav-bar">
+            <button className="minimal-nav-icon" type="button" onClick={() => openMenu()} aria-label="Open navigation menu">
+              <Menu size={17} strokeWidth={1.4} />
+            </button>
+            <Link to="/browse" className="minimal-nav-brand">CampusKart</Link>
+            <button className="minimal-nav-icon minimal-search-button" type="button" onClick={() => openMenu({ focusSearch: true })} aria-label="Search products">
+              <Search size={16} strokeWidth={1.4} />
+              {unreadCount > 0 && <span className="minimal-notification-dot">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+            </button>
+          </div>
+        )}
 
-      <nav className="store-categories" aria-label="Product categories">
-        <div className="store-categories-inner">
-          {CATEGORIES.map(([category, Icon]) => {
-            const target = category === 'All' ? '/browse' : `/browse?category=${encodeURIComponent(category)}`;
-            const active = location.pathname === '/browse' && (category === 'All' ? !new URLSearchParams(location.search).get('category') : new URLSearchParams(location.search).get('category') === category);
-            return <Link key={category} to={target} className={`store-category${active ? ' active' : ''}`}><Icon size={15} />{category}</Link>;
-          })}
-          <span className="store-category-spacer" />
-          <Link to="/guide" className="store-category">How it works</Link>
-          {isLoggedIn && <Link to="/dashboard" className="store-category">My listings</Link>}
-          {isAdmin && <Link to="/admin" className="store-category">Admin</Link>}
-        </div>
-      </nav>
+        {menuOpen && (
+          <>
+            <button className="minimal-nav-backdrop" type="button" onClick={() => setMenuOpen(false)} aria-label="Close navigation menu" />
+            <div className="minimal-nav-panel" role="dialog" aria-modal="true" aria-label="Site navigation">
+              <div className="minimal-menu-head">
+                <button className="minimal-nav-icon" type="button" onClick={() => setMenuOpen(false)} aria-label="Close navigation menu">
+                  <X size={16} strokeWidth={1.2} />
+                </button>
+                <Link to="/browse" className="minimal-nav-brand">CampusKart</Link>
+                <span />
+              </div>
 
-      {mobileOpen && <nav className="store-mobile-menu"><Link to="/browse">Browse products</Link><Link to="/sell">Sell an item</Link><Link to="/guide">How it works</Link>{isLoggedIn && <Link to="/dashboard">My listings</Link>}{isLoggedIn ? <button type="button" onClick={handleLogout}>Sign out</button> : <Link to="/login">Sign in / Sign up</Link>}</nav>}
-    </header>
+              <div className="minimal-menu-search">
+                <form role="search" onSubmit={submitSearch}>
+                  <Search size={14} strokeWidth={1.4} />
+                  <input ref={searchInputRef} value={query} onChange={event => setQuery(event.target.value)} placeholder="Search products" aria-label="Search products" />
+                </form>
+              </div>
+
+              <nav className="minimal-menu-nav" aria-label="Product categories">
+                {MENU_LINKS.map(([label, target]) => (
+                  <Link key={label} to={target} className={`minimal-menu-link${isActive(target) ? ' active' : ''}`}>{label}</Link>
+                ))}
+              </nav>
+
+              <div className="minimal-menu-footer">
+                <Link to={isLoggedIn ? '/profile' : '/login'}>{isLoggedIn ? user?.name?.split(' ')[0] || 'Account' : 'Account'}</Link>
+                <Link to="/sell">Sell</Link>
+                <Link to="/guide">Support</Link>
+                {isLoggedIn && <Link to="/dashboard">My listings</Link>}
+                {isLoggedIn && <Link to="/notifications">Notifications{unreadCount > 0 ? ` (${unreadCount})` : ''}</Link>}
+                {isAdmin && <Link to="/admin">Admin</Link>}
+                {isLoggedIn ? <button type="button" onClick={handleLogout}>Sign out</button> : <Link to="/login">Sign in</Link>}
+              </div>
+            </div>
+          </>
+        )}
+      </header>
+    </>
   );
 };
 
