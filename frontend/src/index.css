@@ -28,29 +28,30 @@
    This palette extends the welcome page's navy and sky-blue visual
    language through the authenticated marketplace. */
 :root {
+  color-scheme: dark;
   /* Color */
-  --color-text-primary:   #eff8ff;
-  --color-text-secondary: #9ab1c3;
-  --color-text-muted:     #668196;
+  --color-text-primary:   #f4f4f4;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted:     #666666;
 
-  --color-bg-primary:     #030914;
-  --color-bg-subtle:      #081321;
-  --color-bg-hover:       #0d1c2c;
+  --color-bg-primary:     #050505;
+  --color-bg-subtle:      #0a0a0a;
+  --color-bg-hover:       #141414;
 
-  --color-border:         #1c3852;
-  --color-border-strong:  #3f7196;
+  --color-border:         #242424;
+  --color-border-strong:  #3d3d3d;
 
-  --color-accent:         #78c6ff;
-  --color-accent-subtle:  #102b40;
+  --color-accent:         #f5f5f5;
+  --color-accent-subtle:  #171717;
 
-  --color-danger:         #ff8f9b;
-  --color-danger-subtle:  #2a141c;
+  --color-danger:         #f0a0a8;
+  --color-danger-subtle:  #211113;
 
-  --color-warning:        #f7c66a;
-  --color-warning-subtle: #29210f;
+  --color-warning:        #d7bd86;
+  --color-warning-subtle: #1d190f;
 
-  --color-success:        #72dda7;
-  --color-success-subtle: #10281d;
+  --color-success:        #9bc9ad;
+  --color-success-subtle: #101b15;
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -73,41 +74,41 @@
   --radius-xl: 20px;
 
   /* Shadows — very subtle, not the heavy blue-tinted shadows from before */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
-  --background: #030914;
-  --foreground: #eff8ff;
-  --card: #081321;
-  --card-foreground: #eff8ff;
-  --popover: #081321;
-  --popover-foreground: #eff8ff;
-  --primary: #78c6ff;
-  --primary-foreground: #04101c;
-  --secondary: #0d1c2c;
-  --secondary-foreground: #eff8ff;
-  --muted: #0d1c2c;
-  --muted-foreground: #9ab1c3;
-  --accent: #102b40;
-  --accent-foreground: #eff8ff;
-  --destructive: #ff8f9b;
-  --border: #1c3852;
-  --input: #1c3852;
-  --ring: #78c6ff;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.35);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.42);
+  --shadow-lg: 0 18px 48px rgba(0,0,0,0.55);
+  --background: #050505;
+  --foreground: #f4f4f4;
+  --card: #0a0a0a;
+  --card-foreground: #f4f4f4;
+  --popover: #0a0a0a;
+  --popover-foreground: #f4f4f4;
+  --primary: #f5f5f5;
+  --primary-foreground: #090909;
+  --secondary: #141414;
+  --secondary-foreground: #f4f4f4;
+  --muted: #141414;
+  --muted-foreground: #a0a0a0;
+  --accent: #171717;
+  --accent-foreground: #f4f4f4;
+  --destructive: #f0a0a8;
+  --border: #242424;
+  --input: #242424;
+  --ring: #f5f5f5;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: #081321;
-  --sidebar-foreground: #eff8ff;
-  --sidebar-primary: #78c6ff;
-  --sidebar-primary-foreground: #04101c;
-  --sidebar-accent: #102b40;
-  --sidebar-accent-foreground: #eff8ff;
-  --sidebar-border: #1c3852;
-  --sidebar-ring: #78c6ff;
+  --sidebar: #0a0a0a;
+  --sidebar-foreground: #f4f4f4;
+  --sidebar-primary: #f5f5f5;
+  --sidebar-primary-foreground: #090909;
+  --sidebar-accent: #171717;
+  --sidebar-accent-foreground: #f4f4f4;
+  --sidebar-border: #242424;
+  --sidebar-ring: #f5f5f5;
 }
 
 /* ── Base styles ─────────────────────────────────────────────*/
@@ -122,6 +123,18 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+::selection {
+  background: #f4f4f4;
+  color: #090909;
+}
+
+button,
+input,
+textarea,
+select {
+  color-scheme: dark;
+}
+
 /* ── Shared component classes ────────────────────────────────
    These replace the inline style objects repeated in every file.
    A component class is written once here, used everywhere. */
@@ -134,7 +147,7 @@ body {
   gap: var(--space-2);
   padding: 10px 18px;
   background: var(--color-accent);
-  color: #04101c;
+  color: #090909;
   border: none;
   border-radius: var(--radius-sm);
   font-family: var(--font-sans);
@@ -146,7 +159,7 @@ body {
   white-space: nowrap;
 }
 .btn-primary:hover {
-  background: #a8dcff;
+  background: #dedede;
   transform: translateY(-1px);
 }
 .btn-primary:active { transform: translateY(0); }
@@ -240,7 +253,7 @@ body {
 }
 .input:focus {
   border-color: var(--color-text-primary);
-  box-shadow: 0 0 0 3px rgba(10,10,10,0.06);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.08);
 }
 .input::placeholder { color: var(--color-text-muted); }
 .input:disabled {
@@ -278,7 +291,7 @@ body {
   letter-spacing: 0.01em;
 }
 .badge-gray     { background: var(--color-bg-hover); color: var(--color-text-secondary); }
-.badge-black    { background: var(--color-accent); color: #04101c; }
+.badge-black    { background: var(--color-accent); color: #090909; }
 .badge-green    { background: var(--color-success-subtle); color: var(--color-success); }
 .badge-amber    { background: var(--color-warning-subtle); color: var(--color-warning); }
 .badge-red      { background: var(--color-danger-subtle); color: var(--color-danger); }

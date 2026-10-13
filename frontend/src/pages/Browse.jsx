@@ -187,38 +187,38 @@ const Browse = () => {
   return (
     <>
       <style>{`
-        body.browse-gallery-page { background: #f3f3f3; color: #111; }
-        body.browse-gallery-page .minimal-nav-spacer { background: #f3f3f3; }
-        .browse-shell { min-height: calc(100vh - 72px); color: #111; background-color: #f3f3f3; background-image: radial-gradient(circle, rgba(94,94,94,.42) 1px, transparent 1.35px); background-size: 144px 144px; background-position: 31px 32px; }
+        body.browse-gallery-page { background: #050505; color: #f4f4f4; }
+        body.browse-gallery-page .minimal-nav-spacer { background: #050505; }
+        .browse-shell { min-height: calc(100vh - 72px); color: #f4f4f4; background-color: #050505; background-image: radial-gradient(circle, rgba(255,255,255,.2) 1px, transparent 1.35px); background-size: 144px 144px; background-position: 31px 32px; }
         .gallery-page { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 31px 0 90px; }
         .gallery-heading { text-align: center; }
         .gallery-heading h1 { margin: 0; font-family: 'Courier New', monospace; font-size: clamp(31px, 3.2vw, 43px); font-weight: 700; line-height: 1; letter-spacing: -.075em; text-transform: uppercase; }
-        .gallery-search-note { margin-top: 9px; color: #555; font-size: 12px; }
-        .gallery-search-note button { margin-left: 4px; padding: 0; border: 0; background: none; color: #111; font: inherit; text-decoration: underline; cursor: pointer; }
-        .gallery-toolbar { min-height: 62px; margin-top: 22px; display: flex; align-items: center; justify-content: flex-end; gap: 18px; color: #333; }
+        .gallery-search-note { margin-top: 9px; color: #888; font-size: 12px; }
+        .gallery-search-note button { margin-left: 4px; padding: 0; border: 0; background: none; color: #ddd; font: inherit; text-decoration: underline; cursor: pointer; }
+        .gallery-toolbar { min-height: 62px; margin-top: 22px; display: flex; align-items: center; justify-content: flex-end; gap: 18px; color: #aaa; }
         .gallery-toolbar-count { margin-right: auto; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
-        .gallery-toolbar select, .gallery-toolbar button, .gallery-toolbar a { padding: 0 0 3px; border: 0; border-bottom: 1px solid transparent; border-radius: 0; background: transparent; color: #222; font: inherit; font-size: 10px; letter-spacing: .07em; text-decoration: none; text-transform: uppercase; cursor: pointer; }
-        .gallery-toolbar select:hover, .gallery-toolbar button:hover, .gallery-toolbar a:hover { border-bottom-color: #222; }
+        .gallery-toolbar select, .gallery-toolbar button, .gallery-toolbar a { padding: 0 0 3px; border: 0; border-bottom: 1px solid transparent; border-radius: 0; background: #050505; color: #aaa; font: inherit; font-size: 10px; letter-spacing: .07em; text-decoration: none; text-transform: uppercase; cursor: pointer; }
+        .gallery-toolbar select:hover, .gallery-toolbar button:hover, .gallery-toolbar a:hover { color: #fff; border-bottom-color: #888; }
         .gallery-toolbar button:disabled { opacity: .45; cursor: wait; }
         .gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: clamp(62px, 8vw, 138px); row-gap: 102px; padding-top: 24px; }
-        .gallery-product { min-width: 0; display: flex; flex-direction: column; align-items: center; color: #111; text-decoration: none; }
+        .gallery-product { min-width: 0; display: flex; flex-direction: column; align-items: center; color: #f4f4f4; text-decoration: none; }
         .gallery-product-visual { width: 100%; height: clamp(235px, 24vw, 316px); display: grid; place-items: center; }
         .gallery-product-visual img { width: 100%; height: 100%; object-fit: contain; transition: transform .32s cubic-bezier(.2,.7,.2,1); }
         .gallery-product:hover .gallery-product-visual img { transform: scale(1.035); }
-        .gallery-product-placeholder { width: 62%; height: 72%; display: grid; place-items: center; border: 1px solid rgba(0,0,0,.12); color: #8b8b8b; }
+        .gallery-product-placeholder { width: 62%; height: 72%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.12); color: #666; }
         .gallery-product-copy { max-width: 100%; margin-top: 15px; text-align: center; }
-        .gallery-product-copy h3 { max-width: 100%; margin: 0; overflow: hidden; color: #171717; font-family: Georgia, 'Times New Roman', serif; font-size: 15px; font-weight: 400; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
-        .gallery-product-copy p { margin: 5px 0 0; color: #666; font-size: 11px; font-variant-numeric: tabular-nums; }
+        .gallery-product-copy h3 { max-width: 100%; margin: 0; overflow: hidden; color: #ededed; font-family: Georgia, 'Times New Roman', serif; font-size: 15px; font-weight: 400; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+        .gallery-product-copy p { margin: 5px 0 0; color: #777; font-size: 11px; font-variant-numeric: tabular-nums; }
         .gallery-skeleton { display: flex; flex-direction: column; align-items: center; }
-        .gallery-skeleton-image { width: 72%; height: clamp(235px, 24vw, 316px); border-radius: 2px; background: #dedede; }
+        .gallery-skeleton-image { width: 72%; height: clamp(235px, 24vw, 316px); border-radius: 2px; background: #151515; }
         .gallery-skeleton-copy { width: 60%; margin-top: 16px; display: grid; justify-items: center; gap: 7px; }
-        .gallery-skeleton-copy > * { background: #d8d8d8; }
-        .gallery-message { max-width: 560px; margin: 70px auto 0; padding: 36px 28px; text-align: center; color: #555; }
+        .gallery-skeleton-copy > * { background: #1c1c1c; }
+        .gallery-message { max-width: 560px; margin: 70px auto 0; padding: 36px 28px; text-align: center; color: #777; }
         .gallery-message svg { margin: 0 auto; display: block; }
-        .gallery-message-title { margin: 15px 0 6px; color: #111; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; }
+        .gallery-message-title { margin: 15px 0 6px; color: #eee; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; }
         .gallery-message p { margin: 0 0 20px; font-size: 13px; }
-        .gallery-message button, .gallery-load-more { padding: 8px 0 4px; border: 0; border-bottom: 1px solid #111; background: transparent; color: #111; font: inherit; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
-        .gallery-error { max-width: 520px; margin: 35px auto; padding: 16px; border: 1px solid #ac7777; color: #6c1f1f; text-align: center; font-size: 13px; }
+        .gallery-message button, .gallery-load-more { padding: 8px 0 4px; border: 0; border-bottom: 1px solid #ddd; background: transparent; color: #ddd; font: inherit; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+        .gallery-error { max-width: 520px; margin: 35px auto; padding: 16px; border: 1px solid #693a3f; color: #e0a0a7; text-align: center; font-size: 13px; }
         .gallery-error button { margin-left: 15px; border: 0; border-bottom: 1px solid currentColor; background: none; color: inherit; cursor: pointer; }
         .gallery-load-wrap { display: flex; justify-content: center; margin-top: 70px; }
         @media (max-width: 800px) {

@@ -95,27 +95,28 @@ const Navbar = () => {
       <style>{`
         .minimal-nav-spacer { height: 72px; }
         .minimal-nav { position: fixed; inset: 0; z-index: 1000; pointer-events: none; font-family: var(--font-sans); }
-        .minimal-nav-bar, .minimal-nav-panel { width: min(576px, calc(100vw - 32px)); background: #f4f4f4; color: #0b0b0b; border-radius: 9px; }
-        .minimal-nav-bar { position: absolute; top: 8px; left: 50%; height: 48px; transform: translateX(-50%); display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; pointer-events: auto; box-shadow: 0 1px 0 rgba(0,0,0,.04); }
+        .minimal-nav-bar, .minimal-nav-panel { width: min(576px, calc(100vw - 32px)); background: #080808; color: #f5f5f5; border: 1px solid #262626; border-radius: 9px; }
+        .minimal-nav-bar { position: absolute; top: 8px; left: 50%; height: 48px; transform: translateX(-50%); display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; pointer-events: auto; box-shadow: 0 10px 35px rgba(0,0,0,.35); }
         .minimal-nav-brand { justify-self: center; color: inherit; text-decoration: none; font-size: 13px; font-weight: 610; letter-spacing: .13em; text-transform: uppercase; }
-        .minimal-nav-icon { width: 48px; height: 48px; display: grid; place-items: center; border: 0; background: transparent; color: #575757; cursor: pointer; }
-        .minimal-nav-icon:hover { color: #050505; }
-        .minimal-nav-icon:focus-visible, .minimal-menu-link:focus-visible, .minimal-menu-footer a:focus-visible, .minimal-menu-footer button:focus-visible { outline: 1px solid #111; outline-offset: -4px; }
+        .minimal-nav-icon { width: 48px; height: 48px; display: grid; place-items: center; border: 0; background: transparent; color: #858585; cursor: pointer; }
+        .minimal-nav-icon:hover { color: #f5f5f5; }
+        .minimal-nav-icon:focus-visible, .minimal-menu-link:focus-visible, .minimal-menu-footer a:focus-visible, .minimal-menu-footer button:focus-visible { outline: 1px solid #f5f5f5; outline-offset: -4px; }
         .minimal-search-button { position: relative; }
-        .minimal-notification-dot { position: absolute; top: 11px; right: 10px; min-width: 13px; height: 13px; padding: 0 3px; display: grid; place-items: center; border-radius: 20px; background: #111; color: #fff; font-size: 7px; font-weight: 700; }
-        .minimal-nav-backdrop { position: absolute; inset: 0; border: 0; background: rgba(0,0,0,.96); pointer-events: auto; cursor: default; animation: minimalFade .18s ease-out; }
+        .minimal-notification-dot { position: absolute; top: 11px; right: 10px; min-width: 13px; height: 13px; padding: 0 3px; display: grid; place-items: center; border-radius: 20px; background: #f5f5f5; color: #090909; font-size: 7px; font-weight: 700; }
+        .minimal-nav-backdrop { position: absolute; inset: 0; border: 0; background: rgba(0,0,0,.93); pointer-events: auto; cursor: default; animation: minimalFade .18s ease-out; }
         .minimal-nav-panel { position: absolute; top: 8px; bottom: 8px; left: 50%; transform: translateX(-50%); display: grid; grid-template-rows: 48px auto 1fr auto; overflow: hidden; pointer-events: auto; animation: minimalPanelIn .22s ease-out; }
         .minimal-menu-head { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; }
         .minimal-menu-search { width: min(400px, calc(100% - 64px)); margin: 22px auto 0; align-self: start; }
         .minimal-menu-search form { position: relative; }
-        .minimal-menu-search svg { position: absolute; left: 0; top: 50%; transform: translateY(-50%); color: #555; }
-        .minimal-menu-search input { width: 100%; height: 38px; padding: 0 30px; border: 0; border-bottom: 1px solid #a7a7a7; border-radius: 0; outline: 0; background: transparent; color: #111; font: inherit; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
-        .minimal-menu-search input:focus { border-bottom-color: #111; }
+        .minimal-menu-search svg { position: absolute; left: 0; top: 50%; transform: translateY(-50%); color: #707070; }
+        .minimal-menu-search input { width: 100%; height: 38px; padding: 0 30px; border: 0; border-bottom: 1px solid #333; border-radius: 0; outline: 0; background: transparent; color: #f5f5f5; font: inherit; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+        .minimal-menu-search input::placeholder { color: #686868; }
+        .minimal-menu-search input:focus { border-bottom-color: #aaa; }
         .minimal-menu-nav { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(10px, 2vh, 20px); padding: 20px 24px; }
-        .minimal-menu-link { color: #0a0a0a; text-decoration: none; text-align: center; text-transform: uppercase; font-family: 'Courier New', monospace; font-size: clamp(27px, 4.2vh, 39px); font-weight: 700; line-height: .98; letter-spacing: -.075em; transition: opacity .15s ease; }
-        .minimal-menu-link:hover, .minimal-menu-link.active { opacity: .42; }
+        .minimal-menu-link { color: #f5f5f5; text-decoration: none; text-align: center; text-transform: uppercase; font-family: 'Courier New', monospace; font-size: clamp(27px, 4.2vh, 39px); font-weight: 700; line-height: .98; letter-spacing: -.075em; transition: color .15s ease; }
+        .minimal-menu-link:hover, .minimal-menu-link.active { color: #6e6e6e; }
         .minimal-menu-footer { min-height: 62px; padding: 0 28px 26px; display: flex; align-items: end; justify-content: center; flex-wrap: wrap; gap: 10px 22px; }
-        .minimal-menu-footer a, .minimal-menu-footer button { padding: 0; border: 0; background: none; color: #1e1e1e; text-decoration: none; font: inherit; font-size: 10px; line-height: 1; text-transform: uppercase; cursor: pointer; }
+        .minimal-menu-footer a, .minimal-menu-footer button { padding: 0; border: 0; background: none; color: #8a8a8a; text-decoration: none; font: inherit; font-size: 10px; line-height: 1; text-transform: uppercase; cursor: pointer; }
         .minimal-menu-footer a:hover, .minimal-menu-footer button:hover { text-decoration: underline; }
         @keyframes minimalFade { from { opacity: 0; } to { opacity: 1; } }
         @keyframes minimalPanelIn { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
