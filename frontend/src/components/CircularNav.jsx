@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Bell, LayoutDashboard, ListPlus, Menu, Shapes, X } from 'lucide-react';
+import { Bell, LayoutDashboard, ListPlus, Menu, Shapes, User, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
 
 const NAV_ITEMS = [
   { name: 'Categories', icon: Shapes, action: 'categories', x: -150, y: -104 },
-  { name: 'Notifications', icon: Bell, to: '/notifications', x: -58, y: -166 },
-  { name: 'List item', icon: ListPlus, to: '/sell', x: 58, y: -166 },
+  { name: 'Notifications', icon: Bell, to: '/notifications', x: -83, y: -156 },
+  { name: 'Profile', icon: User, to: '/profile', x: 0, y: -175 },
+  { name: 'List item', icon: ListPlus, to: '/sell', x: 83, y: -156 },
   { name: 'My items', icon: LayoutDashboard, to: '/dashboard', x: 150, y: -104 },
 ];
 
@@ -84,10 +85,11 @@ const CircularNav = () => {
         .circular-nav-trigger:focus-visible, .circular-nav-item:focus-visible .circular-nav-item-icon { outline: 1px solid #f4f4f4; outline-offset: 3px; }
         @media (max-width: 520px) {
           .circular-nav-item { width: 72px; }
-          .circular-nav-item:nth-of-type(2) { --item-x: -117px !important; --item-y: -91px !important; }
-          .circular-nav-item:nth-of-type(3) { --item-x: -42px !important; --item-y: -151px !important; }
-          .circular-nav-item:nth-of-type(4) { --item-x: 42px !important; --item-y: -151px !important; }
-          .circular-nav-item:nth-of-type(5) { --item-x: 117px !important; --item-y: -91px !important; }
+          .circular-nav-item:nth-of-type(2) { --item-x: -122px !important; --item-y: -86px !important; }
+          .circular-nav-item:nth-of-type(3) { --item-x: -67px !important; --item-y: -134px !important; }
+          .circular-nav-item:nth-of-type(4) { --item-x: 0px !important; --item-y: -151px !important; }
+          .circular-nav-item:nth-of-type(5) { --item-x: 67px !important; --item-y: -134px !important; }
+          .circular-nav-item:nth-of-type(6) { --item-x: 122px !important; --item-y: -86px !important; }
           .circular-nav-item-icon { width: 50px; height: 50px; }
           .circular-nav-item-label { font-size: 8px; }
         }
