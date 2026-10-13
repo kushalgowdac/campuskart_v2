@@ -131,8 +131,7 @@ const Welcome = () => {
           color: #f4f4f4;
         }
         .landing-nav { width: min(1320px, calc(100% - 48px)); height: 72px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #202020; }
-        .landing-brand { display: flex; align-items: center; gap: 10px; color: #f4f4f4; text-decoration: none; font-size: 19px; font-weight: 700; letter-spacing: -0.03em; }
-        .landing-brand-mark { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 6px; background: #f4f4f4; color: #090909; font-size: 15px; font-weight: 800; }
+        .landing-brand { display: inline-flex; align-items: center; color: #f4f4f4; text-decoration: none; font-size: 16px; font-weight: 610; letter-spacing: 0.16em; text-transform: uppercase; }
         .landing-nav-links { display: flex; align-items: center; gap: 30px; }
         .landing-nav-links a { color: #909090; text-decoration: none; font-size: 13px; transition: color 0.15s; }
         .landing-nav-links a:hover { color: white; }
@@ -153,6 +152,7 @@ const Welcome = () => {
         .landing-access { margin-top: 15px; color: #676767; font-size: 12px; line-height: 1.5; }
         .landing-access strong { color: #a5a5a5; }
         .landing-cta { min-height: 52px; padding: 0 32px; font-size: 17px; font-weight: 600; line-height: 1.2; border-radius: 1.15rem; }
+        .landing-cta-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; margin-top: 12px; }
         .landing-error { max-width: 550px; margin-top: 14px; padding: 10px 12px; border: 1px solid #7f3540; border-radius: 6px; background: rgba(127,53,64,0.16); color: #ffb7c0; font-size: 13px; }
         .landing-art { position: relative; width: 110%; margin-left: -8%; }
         .welcome-signal { display: block; width: 100%; height: auto; filter: drop-shadow(0 0 22px rgba(255,255,255,0.04)); }
@@ -198,6 +198,7 @@ const Welcome = () => {
           .landing-hero-actions { flex-direction: column; }
           .landing-hero-actions .landing-button { width: 100%; }
           .landing-cta { width: 100%; padding: 0 20px; }
+          .landing-cta-row { margin-top: 10px; }
           .landing-art { width: 125%; margin-left: -12%; }
           .landing-guide-inner { width: calc(100% - 32px); padding: 68px 0 72px; }
           .landing-guide-grid { grid-template-columns: 1fr; }
@@ -207,7 +208,6 @@ const Welcome = () => {
 
       <header className="landing-nav">
         <a className="landing-brand" href="#top" aria-label="CampusKart home">
-          <span className="landing-brand-mark">CK</span>
           CampusKart
         </a>
         <nav className="landing-nav-links" aria-label="Welcome page navigation">
@@ -228,7 +228,7 @@ const Welcome = () => {
               Welcome to <br /> CampusKart RVCE
             </motion.h1>
 
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <div className="landing-cta-row">
               <Button
                 variant="ghost"
                 type="button"
