@@ -3,46 +3,8 @@ import { Link, Navigate } from 'react-router-dom';
 import { supabase, useAuth } from '../context/AuthContext';
 import { BUYER_STEPS, SELLER_STEPS } from '../content/marketplaceGuide';
 import SplitText from '../components/SplitText';
-
-const SignalGraphic = () => {
-  const curves = [46, 72, 98, 124, 150, 176, 202];
-
-  return (
-    <svg className="welcome-signal" viewBox="0 0 700 430" role="img" aria-label="Flowing lines connecting the campus marketplace">
-      <defs>
-        <linearGradient id="signal-line" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#303030" stopOpacity="0.28" />
-          <stop offset="0.48" stopColor="#b8b8b8" stopOpacity="0.9" />
-          <stop offset="1" stopColor="#f2f2f2" />
-        </linearGradient>
-        <radialGradient id="signal-glow">
-          <stop offset="0" stopColor="#d0d0d0" stopOpacity="0.18" />
-          <stop offset="1" stopColor="#d0d0d0" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <circle cx="354" cy="215" r="130" fill="url(#signal-glow)" />
-      {curves.map((spread, index) => (
-        <path
-          key={spread}
-          d={`M 0 ${215 - spread / 2} C 150 ${215 - spread}, 205 ${215 + spread}, 350 215 C 470 ${215 - spread}, 560 ${215 - spread / 1.4}, 700 ${215 - spread / 2}`}
-          fill="none"
-          stroke="url(#signal-line)"
-          strokeWidth={index === curves.length - 1 ? 2.1 : 1.6}
-        />
-      ))}
-      {curves.map((spread, index) => (
-        <path
-          key={`lower-${spread}`}
-          d={`M 0 ${215 + spread / 2} C 150 ${215 + spread}, 205 ${215 - spread}, 350 215 C 470 ${215 + spread}, 560 ${215 + spread / 1.4}, 700 ${215 + spread / 2}`}
-          fill="none"
-          stroke="url(#signal-line)"
-          strokeWidth={index === curves.length - 1 ? 2.1 : 1.6}
-        />
-      ))}
-      <path d="M0 215 H700" stroke="#e8e8e8" strokeWidth="1.8" opacity="0.9" />
-    </svg>
-  );
-};
+import { BackgroundPaths } from '@/components/ui/background-paths';
+import { Button } from '@/components/ui/button';
 
 const GuidanceCard = ({ label, title, steps }) => (
   <article className="landing-guide-card">
@@ -252,15 +214,39 @@ const Welcome = () => {
       </header>
 
       <main id="top">
-        <section className="landing-hero">
-          <div className="landing-copy">
-            <span className="landing-kicker">Built for the RVCE community</span>
-            <h1>Buy and sell,<br />within RVCE.</h1>
-            <p>Before you begin, here is everything you need to know about discovering, buying, and selling pre-owned items within your campus community.</p>
-          </div>
-          <div className="landing-art" aria-hidden="true">
-            <SignalGraphic />
-          </div>
+        <section className="landing-paths dark">
+          <BackgroundPaths
+            title="Buy and sell within RVCE"
+            action={
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <div className="inline-block group relative bg-gradient-to-b from-black/10 to-white/10 dark:from-white/10 dark:to-black/10 p-px rounded-2xl backdrop-blur-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={signInWithGoogle}
+                    disabled={loading}
+                    className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md bg-white/95 hover:bg-white dark:bg-black/95 dark:hover:bg-black text-black dark:text-white transition-all duration-300 group-hover:-translate-y-0.5 border border-black/10 dark:border-white/10 disabled:opacity-60"
+                  >
+                    {loading ? 'Redirecting…' : 'Sign in with Google'}
+                  </Button>
+                </div>
+                <div className="inline-block group relative bg-gradient-to-b from-black/10 to-white/10 dark:from-white/10 dark:to-black/10 p-px rounded-2xl backdrop-blur-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <Button
+                    asChild
+                    variant="ghost"
+                    className="rounded-[1.15rem] px-8 py-6 text-lg font-semibold backdrop-blur-md bg-white/95 hover:bg-white dark:bg-black/95 dark:hover:bg-black text-black dark:text-white transition-all duration-300 group-hover:-translate-y-0.5 border border-black/10 dark:border-white/10"
+                  >
+                    <Link to="/browse">
+                      Browse items
+                      <span className="ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 transition-all duration-300">
+                        →
+                      </span>
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            }
+          />
         </section>
 
         <section className="landing-guide" id="how-it-works">
