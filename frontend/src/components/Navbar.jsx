@@ -66,6 +66,15 @@ const Navbar = () => {
     if (searchOpen) searchInputRef.current?.focus();
   }, [searchOpen]);
 
+  useEffect(() => {
+    const openCategories = () => {
+      setSearchOpen(false);
+      setMenuOpen(true);
+    };
+    window.addEventListener('campuskart:open-categories', openCategories);
+    return () => window.removeEventListener('campuskart:open-categories', openCategories);
+  }, []);
+
   const openMenu = ({ focusSearch = false } = {}) => {
     setMenuOpen(true);
     setSearchOpen(focusSearch);

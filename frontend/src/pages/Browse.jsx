@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '../api';
 import ProductCard from '../components/ProductCard';
+import CircularNav from '../components/CircularNav';
 import {
   PRODUCT_LIST_CACHE_TTL,
   productListCacheKey,
@@ -190,7 +191,7 @@ const Browse = () => {
         body.browse-gallery-page { background: #050505; color: #f4f4f4; }
         body.browse-gallery-page .minimal-nav-spacer { background: #050505; }
         .browse-shell { min-height: calc(100vh - 72px); color: #f4f4f4; background-color: #050505; background-image: radial-gradient(circle, rgba(255,255,255,.2) 1px, transparent 1.35px); background-size: 144px 144px; background-position: 31px 32px; }
-        .gallery-page { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 31px 0 90px; }
+        .gallery-page { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 31px 0 150px; }
         .gallery-heading { text-align: center; }
         .gallery-heading h1 { margin: 0; font-family: 'Courier New', monospace; font-size: clamp(31px, 3.2vw, 43px); font-weight: 700; line-height: 1; letter-spacing: -.075em; text-transform: uppercase; }
         .gallery-search-note { margin-top: 9px; color: #888; font-size: 12px; }
@@ -312,6 +313,7 @@ const Browse = () => {
         )}
         </div>
       </main>
+      <CircularNav />
     </>
   );
 };

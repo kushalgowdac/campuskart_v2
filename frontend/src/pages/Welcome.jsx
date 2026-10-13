@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../context/AuthContext';
 import { BUYER_STEPS, SELLER_STEPS } from '../content/marketplaceGuide';
+import SplitText from '../components/SplitText';
 
 const SignalGraphic = () => {
   const curves = [46, 72, 98, 124, 150, 176, 202];
@@ -63,6 +64,15 @@ const GuidanceCard = ({ label, title, steps }) => (
 const Welcome = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [introStage, setIntroStage] = useState('welcome');
+  const stageTimerRef = useRef(null);
+
+  useEffect(() => () => window.clearTimeout(stageTimerRef.current), []);
+
+  const queueStage = (stage, wait) => {
+    window.clearTimeout(stageTimerRef.current);
+    stageTimerRef.current = window.setTimeout(() => setIntroStage(stage), wait);
+  };
 
   const signInWithGoogle = async () => {
     setLoading(true);
@@ -79,6 +89,66 @@ const Welcome = () => {
       setLoading(false);
     }
   };
+
+  if (introStage !== 'content') {
+    const isWelcome = introStage === 'welcome';
+    return (
+      <main className="intro-sequence" aria-live="polite">
+        <style>{`
+          .intro-sequence { min-height: 100svh; display: grid; place-items: center; overflow: hidden; background: #000; color: #f5f5f5; }
+          .intro-sequence::before { content: ''; position: fixed; inset: 0; pointer-events: none; background-image: radial-gradient(circle, rgba(255,255,255,.13) 1px, transparent 1.2px); background-size: 96px 96px; opacity: .2; }
+          .intro-stage { position: relative; width: min(1100px, calc(100% - 40px)); display: grid; justify-items: center; text-align: center; animation: introStageIn .4s ease-out; }
+          .intro-eyebrow { margin-bottom: 25px; color: #666; font-size: 10px; font-weight: 650; letter-spacing: .2em; text-transform: uppercase; }
+          .intro-title { color: #f5f5f5; font-family: 'Courier New', monospace; font-size: clamp(42px, 8vw, 108px); font-weight: 900; line-height: .95; letter-spacing: -.075em; text-transform: uppercase; }
+          .intro-dot-title { font-size: clamp(39px, 7.2vw, 94px); }
+          .intro-dot-title .split-text-piece { color: #f5f5f5; -webkit-mask-image: radial-gradient(circle, #000 2.25px, transparent 2.8px); mask-image: radial-gradient(circle, #000 2.25px, transparent 2.8px); -webkit-mask-size: 7px 7px; mask-size: 7px 7px; }
+          .intro-loading-copy { margin-top: 38px; color: #8a8a8a; font-family: 'Courier New', monospace; font-size: clamp(12px, 1.4vw, 17px); letter-spacing: -.03em; }
+          .intro-progress { width: min(330px, 65vw); height: 3px; margin-top: 17px; overflow: hidden; background: #222; }
+          .intro-progress::after { content: ''; display: block; width: 100%; height: 100%; background: #f5f5f5; transform-origin: left; animation: introProgress 2.25s cubic-bezier(.22,1,.36,1) forwards; }
+          .intro-skip { position: fixed; top: 24px; right: 28px; z-index: 2; padding: 7px 0; border: 0; border-bottom: 1px solid transparent; background: none; color: #666; font: inherit; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
+          .intro-skip:hover { color: #eee; border-bottom-color: #555; }
+          @keyframes introStageIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes introProgress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+          @media (max-width: 620px) {
+            .intro-title { font-size: clamp(30px, 10vw, 48px); }
+            .intro-dot-title { font-size: clamp(31px, 10vw, 52px); }
+            .intro-dot-title .split-text-piece { -webkit-mask-size: 5px 5px; mask-size: 5px 5px; -webkit-mask-image: radial-gradient(circle, #000 1.55px, transparent 2px); mask-image: radial-gradient(circle, #000 1.55px, transparent 2px); }
+            .intro-skip { top: 18px; right: 18px; }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .intro-stage { animation: none; }
+            .intro-progress::after { animation-duration: .01ms; }
+          }
+        `}</style>
+
+        <button className="intro-skip" type="button" onClick={() => setIntroStage('content')}>Skip intro</button>
+        <section className="intro-stage" key={introStage}>
+          <span className="intro-eyebrow">{isWelcome ? 'RVCE student marketplace' : 'Loading campus marketplace'}</span>
+          <SplitText
+            text={isWelcome ? 'WELCOME, RVIAN.' : 'CAMPUSKART RVCE'}
+            className={`intro-title${isWelcome ? '' : ' intro-dot-title'}`}
+            delay={isWelcome ? 55 : 45}
+            duration={isWelcome ? 1.05 : 0.9}
+            ease="power3.out"
+            splitType="chars"
+            from={{ opacity: 0, y: 40 }}
+            to={{ opacity: 1, y: 0 }}
+            threshold={0.1}
+            rootMargin="-100px"
+            textAlign="center"
+            onLetterAnimationComplete={() => queueStage(isWelcome ? 'brand' : 'content', isWelcome ? 420 : 900)}
+            showCallback
+          />
+          {!isWelcome && (
+            <>
+              <p className="intro-loading-copy">Connecting students, circulating essentials...</p>
+              <div className="intro-progress" aria-hidden="true" />
+            </>
+          )}
+        </section>
+      </main>
+    );
+  }
 
   return (
     <div className="landing-shell">
@@ -181,7 +251,7 @@ const Welcome = () => {
         <section className="landing-hero">
           <div className="landing-copy">
             <span className="landing-kicker">Built for the RVCE community</span>
-            <h1>Welcome,<br />RVians.</h1>
+            <h1>Buy and sell,<br />within RVCE.</h1>
             <p>Before you begin, here is everything you need to know about discovering, buying, and selling pre-owned items within your campus community.</p>
           </div>
           <div className="landing-art" aria-hidden="true">
