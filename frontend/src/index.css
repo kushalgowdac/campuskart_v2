@@ -520,10 +520,10 @@ select {
 .light .gallery-error { border-color: #e0aeb4; color: #a33540; }
 
 /* ── Circular nav light-mode overrides ──────────────────────── */
-.light .circular-nav-item { color: #444444; }
-.light .circular-nav-item:hover { color: #000000; }
-.light .circular-nav-item-icon { border-color: #dcdcdc; background: rgba(255,255,255,.94); box-shadow: 0 10px 30px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.6); }
-.light .circular-nav-item:hover .circular-nav-item-icon { border-color: #999999; background: #f0f0f0; }
+.light .circular-nav-item { color: #fff; }
+.light .circular-nav-item:hover { color: #fff; }
+.light .circular-nav-item-icon { border-color: #fff; background: #fff; color: #0a0a0a; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+.light .circular-nav-item:hover .circular-nav-item-icon { border-color: #fff; background: #fff; }
 .light .circular-nav-badge { border-color: #ffffff; background: #111111; color: #ffffff; }
 .light .circular-nav-trigger { border-color: rgba(0,0,0,.16); box-shadow: 0 8px 26px rgba(0,0,0,.18); }
 

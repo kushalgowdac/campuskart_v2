@@ -70,15 +70,15 @@ const CircularNav = () => {
         .circular-nav-layer { position: fixed; inset: 0; z-index: 920; pointer-events: none; }
         .circular-nav-backdrop { position: absolute; inset: 0; border: 0; background: rgba(0,0,0,.72); opacity: 0; pointer-events: none; transition: opacity .25s ease; backdrop-filter: blur(3px); }
         .circular-nav-layer.open .circular-nav-backdrop { opacity: 1; pointer-events: auto; }
-        .circular-nav-item { --item-x: 0px; --item-y: 0px; position: absolute; bottom: 27px; left: 50%; width: 82px; padding: 0; display: grid; justify-items: center; gap: 8px; border: 0; background: transparent; color: #d8d8d8; opacity: 0; transform: translate(-50%, 0) scale(.55); pointer-events: none; cursor: pointer; transition: transform .38s cubic-bezier(.2,.82,.2,1), opacity .2s ease, color .15s ease; }
+        .circular-nav-item { --item-x: 0px; --item-y: 0px; position: absolute; bottom: 27px; left: 50%; width: 82px; padding: 0; display: grid; justify-items: center; gap: 8px; border: 0; background: transparent; color: #fff; opacity: 0; transform: translate(-50%, 0) scale(.55); pointer-events: none; cursor: pointer; transition: transform .38s cubic-bezier(.2,.82,.2,1), opacity .2s ease, color .15s ease; }
         .circular-nav-layer.open .circular-nav-item { opacity: 1; transform: translate(calc(-50% + var(--item-x)), var(--item-y)) scale(1); pointer-events: auto; }
         .circular-nav-item:hover { color: #fff; }
-        .circular-nav-item-icon { position: relative; width: 54px; height: 54px; display: grid; place-items: center; border: 1px solid #343434; border-radius: 50%; background: rgba(10,10,10,.92); box-shadow: 0 10px 30px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.05); backdrop-filter: blur(18px); transition: border-color .15s ease, transform .15s ease, background .15s ease; }
-        .circular-nav-item:hover .circular-nav-item-icon { border-color: #777; background: #141414; transform: translateY(-2px); }
-        .circular-nav-item-label { font-size: 9px; font-weight: 650; letter-spacing: .09em; text-transform: uppercase; white-space: nowrap; }
+        .circular-nav-item-icon { position: relative; width: 54px; height: 54px; display: grid; place-items: center; border: 1px solid #fff; border-radius: 50%; background: #fff; color: #0a0a0a; box-shadow: 0 10px 30px rgba(0,0,0,.48); transition: border-color .15s ease, transform .15s ease, background .15s ease; }
+        .circular-nav-item:hover .circular-nav-item-icon { border-color: #fff; background: #fff; transform: translateY(-2px); }
+        .circular-nav-item-label { color: #fff; font-size: 9px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; white-space: nowrap; }
         .circular-nav-badge { position: absolute; top: -3px; right: -3px; min-width: 18px; height: 18px; padding: 0 4px; display: grid; place-items: center; border: 2px solid #090909; border-radius: 999px; background: #f4f4f4; color: #090909; font-size: 8px; font-weight: 800; }
         .circular-nav-trigger { position: absolute; bottom: 22px; left: 50%; width: 58px; height: 58px; padding: 0; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.28); border-radius: 50%; background: #ffffff; color: #0a0a0a; box-shadow: 0 8px 26px rgba(0,0,0,.45); transform: translateX(-50%); pointer-events: auto; cursor: pointer; transition: transform .2s ease, background .2s ease; }
-        .circular-nav-trigger:hover { transform: translateX(-50%) translateY(-2px) scale(1.05); background: #f0f0f0; }
+        .circular-nav-trigger:hover { transform: translateX(-50%) translateY(-2px) scale(1.05); background: #fff; }
         .circular-nav-trigger span { display: none; }
         .circular-nav-trigger svg { position: relative; z-index: 1; transition: transform .28s ease; }
         .circular-nav-layer.open .circular-nav-trigger { color: #0a0a0a; border-color: rgba(255,255,255,.45); }
@@ -115,7 +115,7 @@ const CircularNav = () => {
               tabIndex={isOpen ? 0 : -1}
             >
               <span className="circular-nav-item-icon">
-                <Icon size={20} strokeWidth={1.45} />
+                <Icon size={23} strokeWidth={1.45} />
                 {badge > 0 && <span className="circular-nav-badge">{badge > 9 ? '9+' : badge}</span>}
               </span>
               <span className="circular-nav-item-label">{item.name}</span>
@@ -124,7 +124,7 @@ const CircularNav = () => {
         })}
 
         <button className="circular-nav-trigger" type="button" onClick={toggleMenu} aria-expanded={isOpen} aria-label={isOpen ? 'Close quick navigation' : 'Open quick navigation'}>
-          {isOpen ? <X size={17} strokeWidth={1.4} /> : <Menu size={17} strokeWidth={1.4} />}
+          {isOpen ? <X size={23} strokeWidth={1.4} /> : <Menu size={23} strokeWidth={1.4} />}
           <span>{isOpen ? 'Close' : 'Navigate'}</span>
         </button>
       </div>
