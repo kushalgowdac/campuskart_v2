@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
+import GuideModal from './components/GuideModal';
 import Browse from './pages/Browse';
 import Welcome from './pages/Welcome';
 
@@ -85,6 +86,7 @@ function App() {
             } />
             </Routes>
           </Suspense>
+          <GuideModal />
         </ErrorBoundary>
       </BrowserRouter>
     </AuthProvider>

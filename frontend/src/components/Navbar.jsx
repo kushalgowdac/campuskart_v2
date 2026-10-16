@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, Search, X, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
+import { openGuide } from './GuideModal';
 import api from '../api';
 
 const MENU_LINKS = [
@@ -223,7 +224,7 @@ const Navbar = () => {
               <div className="minimal-menu-footer">
                 <Link to={isLoggedIn ? '/profile' : '/login'}>{isLoggedIn ? user?.name?.split(' ')[0] || 'Account' : 'Account'}</Link>
                 <Link to="/sell">Sell</Link>
-                <Link to="/guide">Support</Link>
+                <button type="button" onClick={() => openGuide()}>Guide</button>
                 {isLoggedIn && <Link to="/dashboard">My listings</Link>}
                 {isLoggedIn && <Link to="/notifications">Notifications{unreadCount > 0 ? ` (${unreadCount})` : ''}</Link>}
                 {isAdmin && <Link to="/admin">Admin</Link>}
