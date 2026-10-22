@@ -7,13 +7,11 @@ import { openGuide } from './GuideModal';
 import api from '../api';
 
 const MENU_LINKS = [
-  ['Shop all', '/browse'],
-  ['Books', '/browse?category=Books'],
-  ['Electronics', '/browse?category=Electronics'],
-  ['Clothing', '/browse?category=Clothing'],
-  ['Stationery', '/browse?category=Stationery'],
-  ['Sports', '/browse?category=Sports'],
-  ['Other', '/browse?category=Other'],
+  ['Create new listing', '/sell'],
+  ['Notifications', '/notifications'],
+  ['Profile', '/profile'],
+  ['My listings', '/dashboard'],
+  ['Closed deals', '/closed-deals'],
 ];
 
 const Navbar = () => {

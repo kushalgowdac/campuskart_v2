@@ -109,7 +109,7 @@ const GuideModal = () => {
         .guide-modal-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
         .guide-modal-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 24px; border: 1px solid transparent; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; transition: transform .15s ease, background .15s ease, border-color .15s ease; }
         .guide-modal-btn:hover { transform: translateY(-1px); }
-        .guide-modal-btn-primary { background: var(--color-accent); color: var(--color-bg-primary); }
+        .guide-modal-btn-primary { background: var(--color-accent); color: var(--color-accent-foreground); }
         .guide-modal-btn-secondary { border-color: var(--color-border-strong); background: transparent; color: var(--color-text-primary); }
         .guide-modal-btn-secondary:hover { background: var(--color-bg-hover); }
         @keyframes guideFade { from { opacity: 0; } to { opacity: 1; } }

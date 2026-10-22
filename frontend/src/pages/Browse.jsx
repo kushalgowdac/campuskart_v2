@@ -196,6 +196,9 @@ const Browse = () => {
         .gallery-heading h1 { margin: 0; font-family: 'Courier New', monospace; font-size: clamp(31px, 3.2vw, 43px); font-weight: 700; line-height: 1; letter-spacing: -.075em; text-transform: uppercase; }
         .gallery-search-note { margin-top: 9px; color: #888; font-size: 12px; }
         .gallery-search-note button { margin-left: 4px; padding: 0; border: 0; background: none; color: #ddd; font: inherit; text-decoration: underline; cursor: pointer; }
+        .gallery-categories { margin: 30px auto 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; }
+        .gallery-categories a { padding: 0 0 4px; border-bottom: 1px solid transparent; color: #777; font-size: 10px; letter-spacing: .08em; text-decoration: none; text-transform: uppercase; }
+        .gallery-categories a:hover, .gallery-categories a.active { border-bottom-color: #aaa; color: #f4f4f4; }
         .gallery-toolbar { min-height: 62px; margin-top: 22px; display: flex; align-items: center; justify-content: flex-end; gap: 18px; color: #aaa; }
         .gallery-toolbar-count { margin-right: auto; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
         .gallery-toolbar select, .gallery-toolbar button, .gallery-toolbar a { padding: 0 0 3px; border: 0; border-bottom: 1px solid transparent; border-radius: 0; background: #050505; color: #aaa; font: inherit; font-size: 10px; letter-spacing: .07em; text-decoration: none; text-transform: uppercase; cursor: pointer; }
@@ -229,6 +232,7 @@ const Browse = () => {
         @media (max-width: 560px) {
           .browse-shell { background-size: 96px 96px; background-position: 20px 20px; }
           .gallery-page { width: calc(100% - 28px); padding-top: 24px; }
+          .gallery-categories { margin-top: 24px; gap: 8px 14px; }
           .gallery-toolbar { min-height: 76px; gap: 10px 14px; flex-wrap: wrap; justify-content: center; }
           .gallery-toolbar-count { width: 100%; margin-right: 0; text-align: center; }
           .gallery-grid { column-gap: 18px; row-gap: 52px; padding-top: 14px; }
@@ -249,6 +253,24 @@ const Browse = () => {
             {appliedSearch && <p className="gallery-search-note">Results for “{appliedSearch}” <button type="button" onClick={clearSearch}>Clear</button></p>}
           </header>
 
+          <nav className="gallery-categories" aria-label="Product categories">
+            {CATEGORIES.map(categoryName => {
+              const categoryParams = new URLSearchParams(searchParams);
+              if (categoryName === 'All') categoryParams.delete('category');
+              else categoryParams.set('category', categoryName);
+              return (
+                <Link
+                  key={categoryName}
+                  to={`/browse${categoryParams.toString() ? `?${categoryParams.toString()}` : ''}`}
+                  className={category === categoryName ? 'active' : ''}
+                  aria-current={category === categoryName ? 'page' : undefined}
+                >
+                  {categoryName}
+                </Link>
+              );
+            })}
+          </nav>
+
           <div className="gallery-toolbar" aria-label="Product controls">
             {!loading && <span className="gallery-toolbar-count">{products.length === 0 ? 'No listings' : `${products.length} item${products.length === 1 ? '' : 's'}`}</span>}
             <select className="srt" value={sort} onChange={e => setSort(e.target.value)}>
@@ -256,6 +278,7 @@ const Browse = () => {
               <option value="price_asc">Price ↑</option>
               <option value="price_desc">Price ↓</option>
             </select>
+            <Link to="/sell">Create new listing</Link>
             <button
               type="button"
               onClick={() => fetchProducts({ force: true })}
@@ -265,7 +288,6 @@ const Browse = () => {
               {refreshing ? 'Refreshing…' : 'Refresh'}
             </button>
             <Link to="/closed-deals">Closed deals</Link>
-            <Link to="/sell">List item +</Link>
           </div>
 
         {error && (

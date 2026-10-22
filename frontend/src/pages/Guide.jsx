@@ -34,7 +34,7 @@ const Guide = () => {
         .guide-card { padding: 26px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-bg-subtle); }
         .guide-card-heading { display: flex; align-items: center; gap: 11px; margin-bottom: 22px; }
         .guide-card-heading h2 { margin: 0; font-size: 19px; letter-spacing: -0.02em; }
-        .guide-card-label { width: 30px; height: 30px; display: grid; place-items: center; flex: 0 0 30px; border-radius: 50%; background: var(--color-accent); color: #090909; font-size: 13px; font-weight: 700; }
+        .guide-card-label { width: 30px; height: 30px; display: grid; place-items: center; flex: 0 0 30px; border-radius: 50%; background: var(--color-accent); color: var(--color-accent-foreground); font-size: 13px; font-weight: 700; }
         .guide-card ol { display: grid; gap: 18px; margin: 0; padding: 0; list-style: none; }
         .guide-card li { display: grid; grid-template-columns: 25px 1fr; gap: 11px; align-items: start; }
         .guide-card li > span { width: 25px; height: 25px; display: grid; place-items: center; border: 1px solid var(--color-border-strong); border-radius: 50%; background: var(--color-bg-primary); color: var(--color-text-secondary); font-size: 11px; font-weight: 700; }
@@ -57,7 +57,7 @@ const Guide = () => {
         .guide-cta h2 { margin: 0 0 5px; font-size: 20px; }
         .guide-cta p { margin: 0; color: var(--color-text-secondary); font-size: 13px; }
         .guide-cta-actions { display: flex; gap: 10px; flex-shrink: 0; }
-        .guide-cta .guide-light-button { background: var(--color-accent); color: #090909; }
+        .guide-cta .guide-light-button { background: var(--color-accent); color: var(--color-accent-foreground); }
         .guide-cta .guide-outline-button { border-color: var(--color-border-strong); background: transparent; color: var(--color-text-primary); }
         @media (max-width: 680px) {
           .guide-page { padding: 40px 16px 56px; }
