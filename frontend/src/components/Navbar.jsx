@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, Search, X, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
-import { openGuide } from './GuideModal';
 import api from '../api';
 
 const MENU_LINKS = [
@@ -15,7 +14,7 @@ const MENU_LINKS = [
 ];
 
 const Navbar = () => {
-  const { user, isLoggedIn, isAdmin, logout } = useAuth();
+  const { isLoggedIn, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const searchInputRef = useRef(null);
@@ -149,7 +148,7 @@ const Navbar = () => {
         .minimal-menu-search input:focus { border-bottom-color: #aaa; }
         .minimal-menu-nav { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(10px, 2vh, 20px); padding: 20px 24px; }
         .minimal-menu-link { color: #f5f5f5; text-decoration: none; text-align: center; text-transform: uppercase; font-family: 'Courier New', monospace; font-size: clamp(27px, 4.2vh, 39px); font-weight: 700; line-height: .98; letter-spacing: -.075em; transition: color .15s ease; }
-        .minimal-menu-link:hover, .minimal-menu-link.active { color: #6e6e6e; }
+        .minimal-menu-link:hover, .minimal-menu-link.active { color: var(--color-nav-hover); }
         .minimal-menu-footer { min-height: 62px; padding: 0 28px 26px; display: flex; align-items: end; justify-content: center; flex-wrap: wrap; gap: 10px 22px; }
         .minimal-menu-footer a, .minimal-menu-footer button { padding: 0; border: 0; background: none; color: #8a8a8a; text-decoration: none; font: inherit; font-size: 10px; line-height: 1; text-transform: uppercase; cursor: pointer; }
         .minimal-menu-footer a:hover, .minimal-menu-footer button:hover { text-decoration: underline; }
@@ -220,11 +219,6 @@ const Navbar = () => {
               </nav>
 
               <div className="minimal-menu-footer">
-                <Link to={isLoggedIn ? '/profile' : '/login'}>{isLoggedIn ? user?.name?.split(' ')[0] || 'Account' : 'Account'}</Link>
-                <Link to="/sell">Sell</Link>
-                <button type="button" onClick={() => openGuide()}>Guide</button>
-                {isLoggedIn && <Link to="/dashboard">My listings</Link>}
-                {isLoggedIn && <Link to="/notifications">Notifications{unreadCount > 0 ? ` (${unreadCount})` : ''}</Link>}
                 {isAdmin && <Link to="/admin">Admin</Link>}
                 {isLoggedIn ? <button type="button" onClick={handleLogout}>Sign out</button> : <Link to="/login">Sign in</Link>}
               </div>

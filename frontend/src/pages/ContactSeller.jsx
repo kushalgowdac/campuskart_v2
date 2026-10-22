@@ -212,7 +212,7 @@ const ContactSeller = () => {
                   color: 'var(--color-text-primary)', transition: 'background 0.15s, border-color 0.15s',
                 }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-bg-hover)'; e.currentTarget.style.borderColor = 'var(--color-border-strong)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-bg-subtle)'; e.currentTarget.style.borderColor = 'var(--color-border)'; }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <span style={{ color: 'var(--color-text-secondary)' }}>{ch.icon}</span>

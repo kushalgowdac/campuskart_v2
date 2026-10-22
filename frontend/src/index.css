@@ -42,7 +42,10 @@
   --color-border-strong:  #3d3d3d;
 
   --color-accent:         #f5f5f5;
+  --color-accent-foreground: #090909;
+  --color-accent-hover:   #dedede;
   --color-accent-subtle:  #171717;
+  --color-nav-hover:      #d0d0d0;
 
   --color-danger:         #f0a0a8;
   --color-danger-subtle:  #211113;
@@ -52,6 +55,7 @@
 
   --color-success:        #9bc9ad;
   --color-success-subtle: #101b15;
+  --color-danger-hover:   #3a1822;
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -67,8 +71,6 @@
   --space-10: 40px;
   --space-12: 48px;
 
-    --color-accent:         #f5f5f5;
-    --color-accent-foreground: #090909;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
@@ -97,8 +99,6 @@
   --input: #242424;
   --ring: #f5f5f5;
   --chart-1: oklch(0.87 0 0);
-    --color-accent:         #111111;
-    --color-accent-foreground: #ffffff;
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
@@ -127,7 +127,7 @@ body {
 
 ::selection {
   background: #f4f4f4;
-  color: #090909;
+  color: var(--color-accent-foreground);
 }
 
 button,
@@ -149,7 +149,7 @@ select {
   gap: var(--space-2);
   padding: 10px 18px;
   background: var(--color-accent);
-  color: #090909;
+  color: var(--color-accent-foreground);
   border: none;
   border-radius: var(--radius-sm);
   font-family: var(--font-sans);
@@ -161,7 +161,7 @@ select {
   white-space: nowrap;
 }
 .btn-primary:hover {
-  background: #dedede;
+  background: var(--color-accent-hover);
   transform: translateY(-1px);
 }
 .btn-primary:active { transform: translateY(0); }
@@ -237,7 +237,7 @@ select {
   cursor: pointer;
   transition: background 0.15s;
 }
-.btn-danger:hover { background: #3a1822; }
+.btn-danger:hover { background: var(--color-danger-hover); }
 
 /* Form input */
 .input {
@@ -293,7 +293,7 @@ select {
   letter-spacing: 0.01em;
 }
 .badge-gray     { background: var(--color-bg-hover); color: var(--color-text-secondary); }
-.badge-black    { background: var(--color-accent); color: #090909; }
+.badge-black    { background: var(--color-accent); color: var(--color-accent-foreground); }
 .badge-green    { background: var(--color-success-subtle); color: var(--color-success); }
 .badge-amber    { background: var(--color-warning-subtle); color: var(--color-warning); }
 .badge-red      { background: var(--color-danger-subtle); color: var(--color-danger); }
@@ -445,10 +445,14 @@ select {
   --color-border-strong:  #b8b8b8;
 
   --color-accent:         #111111;
+  --color-accent-foreground: #ffffff;
+  --color-accent-hover:   #2b2b2b;
   --color-accent-subtle:  #e7e7e7;
+  --color-nav-hover:      #4a4a4a;
 
   --color-danger:         #b0242f;
   --color-danger-subtle:  #fbe9eb;
+  --color-danger-hover:   #f6d6da;
 
   --color-warning:        #8a6a14;
   --color-warning-subtle: #fbf3da;
@@ -498,7 +502,7 @@ select {
 .light .minimal-menu-search input::placeholder { color: #9a9a9a; }
 .light .minimal-menu-search input:focus { border-bottom-color: #555555; }
 .light .minimal-menu-link { color: #111111; }
-.light .minimal-menu-link:hover, .light .minimal-menu-link.active { color: #767676; }
+.light .minimal-menu-link:hover, .light .minimal-menu-link.active { color: var(--color-nav-hover); }
 .light .minimal-menu-footer a, .light .minimal-menu-footer button { color: #666666; }
 
 /* ── Browse / gallery light-mode overrides ──────────────────── */
@@ -507,6 +511,7 @@ select {
 .light .browse-shell { color: #111111; background-color: #f5f5f5; background-image: radial-gradient(circle, rgba(0,0,0,.16) 1px, transparent 1.35px); }
 .light .gallery-search-note { color: #666666; }
 .light .gallery-search-note button { color: #111111; }
+.light .gallery-categories a:hover, .light .gallery-categories a.active { color: #111111; border-bottom-color: #777777; }
 .light .gallery-toolbar { color: #555555; }
 .light .gallery-toolbar select, .light .gallery-toolbar button, .light .gallery-toolbar a { background: #f5f5f5; color: #555555; }
 .light .gallery-toolbar select:hover, .light .gallery-toolbar button:hover, .light .gallery-toolbar a:hover { color: #111111; border-bottom-color: #888888; }
